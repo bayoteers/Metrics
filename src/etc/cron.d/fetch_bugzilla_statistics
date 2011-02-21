@@ -1,0 +1,25 @@
+#==========================================================================
+# Bugzilla statistics: example file: /etc/cron.d/fetch_bugzilla_statistics
+#
+# Copyright 2011, Nokia Oy
+# Maintainer: Grzegorz Szura <ext-grzegorz.szura@nokia.com>
+# Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+#
+# Date: Thu Feb  3 14:21:00 EET 2011
+#==========================================================================
+
+#MAILTO=ext-grzegorz.szura@nokia.com
+HOME=/home/bugstats
+SHELL=/bin/sh
+PATH=/usr/local/bin:/usr/bin:/bin
+EMAIL=Bugzilla statistics <no_reply@your_isp.com>
+#http_proxy=http://your.proxy:8080/
+#https_proxy=http://your.proxy:8080/
+
+
+#0  5  * * 1-5  bugstats  fetch_statistics.sh
+
+# checking if list of componnets is up to date
+#1  0  * * 1-5  bugstats  check_components.pl /usr/local/etc/bugzilla_statistics/EXAMPLE_classification_MeeGo_Projects.conf
+#2  0  * * 1-5  bugstats  check_components.pl /usr/local/etc/bugzilla_statistics/EXAMPLE_classification_MeeGo_Projects.conf
+

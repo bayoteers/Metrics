@@ -1,0 +1,576 @@
+/* ==========================================================================
+ * BAM (Bugzilla Automated Metrics): syles.css
+ *
+ * Copyright 2011, Nokia Oy
+ * Maintainer: Grzegorz Szura <ext-grzegorz.szura@nokia.com>
+ * Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+ *
+ * Date: Thu Feb  3 14:21:00 EET 2011
+ * ==========================================================================
+*/
+
+body {
+    font            : normal 11px "Arial CE", "Helvetica CE", Arial, Helvetica, sans-serif; 
+    margin          : 0px;
+    padding         : 0px;
+    color           : #000000;
+    text-align      : left;
+    background      : #eeeeee;
+}
+
+p {
+    padding         : 0px;
+}
+
+hr {
+    text-align      : left;
+    margin-left     : 0;
+    height          : 1px;
+    border-width    : 0;
+    color           : #68b3e3;
+    background-color: #68b3e3;
+    width           : 70%;
+}
+
+.hr_short {
+    text-align      : left;
+    margin-left     : 0;
+    height          : 1px;
+    border-width    : 0;
+    color           : #68b3e3;
+    background-color: #68b3e3;
+    width           : 10%;
+}
+
+.hr_100 {
+    text-align      : left;
+    margin-left     : 0;
+    height          : 1px;
+    border-width    : 0;
+    color           : #68b3e3;
+    background-color: #68b3e3;
+    width           : 100%;
+    border          : dotted 1px #68b3e3;
+    border-style    : none none dotted;
+}
+
+
+table, th, td {
+    border          : solid #68b3e3 1px;
+    border-collapse : collapse;
+    padding         : 1px 5px 1px 5px;
+    text-align      : center;
+}
+
+.td_align_to_left {
+    text-align      : left;
+}
+
+.tab_links, .tab_links td, .tab_links th {
+    border          : none;
+    border-collapse : collapse;
+    padding         : 1px 5px 1px 5px;
+    text-align      : left;
+}
+
+select, option {
+	font            : normal 11px "Arial CE", "Helvetica CE", Arial, Helvetica, sans-serif;
+}
+
+#content {
+    text-align      : left;
+    vertical-align  : middle;
+    margin          : 0px;
+    padding         : 5px;
+    border          : none;
+    background      : #eeeeee;
+}
+
+#header {
+    border          : none;
+    padding         : 0px;
+}
+
+.header_element {
+    position        : relative;
+    float           : left;
+    border          : none;
+    padding         : 5px;
+    z-index         : 100;
+}
+
+.header_span {
+    display         : block;
+    padding         : 0.4em 0em;
+    vertical-align  : middle;
+    font            : bold 14px "Arial CE", "Helvetica CE", Arial, Helvetica, sans-serif;
+}
+
+.header_space {
+    position        : relative;
+    float           : left;
+    border          : none;
+    padding         : 0px;
+    width           : 20px;
+}
+
+.header_warning {
+    display:        block;
+    padding         : 0.4em 0em;
+    vertical-align  : middle;
+    font            : bold 14px "Arial CE", "Helvetica CE", Arial, Helvetica, sans-serif;
+    color           : #dd0000;
+}
+
+#stats {
+    border          : none;
+    padding         : 0px;
+    clear           : both;
+}
+
+#stats_table {
+    position        : relative;
+    float           : left;
+    border          : none;
+    padding         : 5px;
+}
+
+#stats_space {
+    position        : relative;
+    float           : left;
+    border          : none;
+    padding         : 5px;
+    width           : 20px;
+}
+
+#stats_graph {
+    float           : left;
+    border          : none;
+    padding         : 5px;
+}
+
+.stats_graph2 {
+    float           : left;
+    border          : none;
+    padding         : 5px;
+    margin          : 0px;
+    vertical-align  : middle;
+    text-align      : center;
+    cursor          : pointer;
+}
+
+.stats_graph2:hover {
+    float           : left;
+    border          : none;
+    padding         : 5px;
+    margin          : 0px;
+    vertical-align  : middle;
+    text-align      : center;
+    background      : #dddddd;
+    cursor          : pointer;
+}
+
+
+img {
+    border : none;
+}
+
+.stats_graph3 {
+    border          : none;
+    margin          : 0px 0px 0px 30px;
+    padding         : 5px;
+    vertical-align  : middle;
+    text-align      : center;
+    cursor          : pointer;
+}
+
+.stats_graph3:hover {
+    border          : none;
+    margin          : 0px 0px 0px 30px;
+    padding         : 5px;
+    vertical-align  : middle;
+    text-align      : center;
+    background      : #dddddd;
+    cursor          : pointer;
+}
+
+#stats_graphs {
+    border          : none;
+    padding         : 0px;
+    clear           : both;
+    vertical-align  : middle;
+    text-align      : center;
+}
+
+#stats_graphs a {
+    border: none;
+}
+
+#details {
+    border          : none;
+    padding         : 5px;
+    clear           : both;
+}
+
+#stats a, #stats a:visited{
+    color           : #30497c;
+    font            : bold 11px "Arial CE", "Helvetica CE", Arial, Helvetica, sans-serif;
+    text-decoration : none;
+}
+
+#stats a:hover, #stats a:active {
+    color           : #dd0000;
+    text-decoration : underline;
+}
+
+#loading_banner {
+    border          : none;
+    width           : 16px;
+    height          : 16px;
+    visibility      : hidden;
+    margin : 0.6em;
+}
+
+#settings_header {
+    position        : absolute;
+    border          : solid #68b3e3 1px;
+    border-top      : solid #dddddd 1px;
+    width           : 80px;
+    padding         : 0.6em 5px;
+    margin          : 0px;
+    text-align      : center;
+    background      : #eeeeee;
+    color           : #30497c;
+    font            : bold 11px "Arial CE", "Helvetica CE", Arial, Helvetica, sans-serif;
+    text-decoration : none;
+    cursor          : pointer;
+}
+
+#settings_header:hover {
+    background      : #dddddd;
+    color           : #dd0000;
+}
+
+#settings {
+    position        : absolute;
+    border          : solid #68b3e3 1px;
+    width           : 80px;
+    /* height          : 15px; */
+    padding         : 5px;
+    margin          : 0px;
+    text-align      : left;
+    background      : #eeeeee;
+    display         : none;
+}
+
+
+#settings button {
+    border          : solid #68b3e3 1px;
+    border-top      : solid #dddddd 1px;
+    background      : #eeeeee;
+    font            : bold 11px "Arial CE", "Helvetica CE", Arial, Helvetica, sans-serif;
+    color           : #30497c;
+    text-decoration : none;
+    cursor          : pointer;
+    padding         : 0.3em 5px;
+    margin          : 0px;
+}
+
+#settings button:hover {
+    background      : #dddddd;
+    color           : #dd0000;
+    
+}
+
+#tt, #tt td {
+    border          : none;
+    border-collapse : collapse;
+    padding         : 2px 10px 1px 5px;
+    text-align      : left;
+    vertical-align  : top;
+}
+
+#tt tr {
+    border-top : dotted #68b3e3 1px;
+}
+
+.span_header {
+    font        : bold 12px "Arial CE", "Helvetica CE", Arial, Helvetica, sans-serif;
+    margin-left : 10px;
+}
+
+.table_div_header {
+    /* TODO */
+}
+
+.table_div_content {
+    display         : none;
+}
+
+.table_header, .table_header td {
+    border          : none;
+    border-collapse : collapse;
+    padding         : 0px;
+    text-align      : left;
+    vertical-align  : middle;
+}
+
+.table_header {
+    border-top : solid #68b3e3 1px;
+    margin-top : 10px;
+    margin-left : 10px;
+}
+
+.table_content, .table_content td {
+    border          : none;
+    border-collapse : collapse;
+    padding         : 0px;
+    text-align      : left;
+    vertical-align  : top;
+}
+
+.table_content tr {
+    border-top : 1px solid #dddddd;
+    margin-left : 10px;
+}
+
+.td0 {
+    width  : 180px;
+    height : 30px;
+}
+
+.td1 {
+    width  : 180px;
+    height : 30px;
+    cursor : pointer;
+}
+
+.td2 {
+    width  : 180px;
+    cursor : pointer;
+}
+
+.td_btn {
+    width           : 360px;
+    height : 30px;
+    cursor          : pointer;
+}
+
+.td0 span {
+    display:        block;
+    position:       relative;
+    font-weight     : bold;
+    padding         : 0.7em 10px 0.4em 5px;
+}
+
+.td1 a, .td2 a {
+    display:        block;
+    position:       relative;
+    text-decoration : none;
+    padding         : 0.7em 10px 0.4em 5px;
+}
+
+.td1:hover, .td2:hover, .td_btn:hover,
+.td1 a:focus,
+.td1 a:hover,
+.td1 a:active,
+.td2 a:focus,
+.td2 a:hover,
+.td2 a:active {
+    background:     #dddddd;
+    color : #dd0000;
+    text-decoration : none;
+}
+
+.tr1 {
+    background-color: #eeeeee;
+    cursor          : pointer;
+}
+.tr1:hover {
+    background-color: #dddddd;
+    cursor          : pointer;
+}
+
+.tr2 {
+    background-color: #cccccc;
+    cursor          : pointer;
+}
+
+
+.div_left {
+    position        : absolute;
+    padding         : 0px;
+    margin-right    : 0px;
+}
+
+.div_right_container {
+    position        : relative;
+    padding         : 0px;
+    margin-right    : 10px;
+    float           : left;
+    overflow        : auto;
+    overflow-x      : hidden;
+    height          : 500px;
+    width           : 300px;
+}
+
+.div_right {
+    position        : absolute;
+    padding         : 0px;
+    margin-right    : 0px;
+}
+
+.div_input {
+    border          : solid 1px #68b3e3;
+    padding         : 5px;
+    width           : 270px;
+    margin-bottom   : 5px;
+}
+
+.div_input_3 {
+    border          : solid 1px #68b3e3;
+    border-top      : none;
+    padding         : 5px;
+    width           : 270px;
+    margin-bottom   : 5px;
+    display         : none;
+}
+
+
+.img_loading_banner {
+    width           : 16px;
+    height          : 16px;
+    visibility      : hidden;
+    text-align      : left;
+}
+
+.span_bold {
+    font-weight     : bold;
+}
+
+.span_bold_underline {
+    font-weight     : bold;
+    text-decoration : underline;
+}
+
+.span_err {
+    color           : #aa0000;
+}
+
+#header_links {
+    margin  : 0px;
+    padding : 0px 0px 20px 0px;
+}
+
+#header_links a, #header_links a:visited {
+    font        : bold 13px "Arial CE", "Helvetica CE", Arial, Helvetica, sans-serif;
+}
+
+.details_menu {
+    margin: 0;
+    padding: 0;
+    float: left;
+    list-style: none;
+    border-bottom: 1px solid #68b3e3;
+    border-left: 1px solid #68b3e3;
+    width: 100%;
+}
+
+.details_menu li {
+    float: left;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #68b3e3;
+    border-left: none;
+    margin-bottom: -1px;
+    overflow: hidden;
+    position: relative;
+    background: #cccccc;
+}
+
+.details_menu li a {
+    color           : #30497c;
+    font            : bold 11px "Arial CE", "Helvetica CE", Arial, Helvetica, sans-serif;
+    text-decoration : none;
+    display         : block;
+    padding         : 0.6em 1em;
+    margin          : 0;
+    border          : 1px solid #eeeeee; /*--Gives the bevel look with a 1px white border inside the list item--*/
+    outline         : none;
+}
+
+.details_menu li a:hover {
+    background      : #dddddd;
+    color           : #dd0000;
+    text-decoration : none;
+}
+.details_menu li.active, .details_menu li.active a:hover  { /*--Makes sure that the active tab does not listen to the hover properties--*/
+    background      : #eeeeee;
+    text-decoration : none;
+    border-bottom   : 1px solid #eeeeee; /*--Makes the active tab look like it's connected with its content--*/
+}
+
+.details_container {
+    border: 1px solid #68b3e3;
+    border-top: 1px solid #eeeeee;
+    overflow: hidden;
+    clear: both;
+    float: left;
+    width: 100%;
+    background: #eeeeee;
+}
+
+.details_tab {
+    padding: 10px;
+    font            : normal 11px "Arial CE", "Helvetica CE", Arial, Helvetica, sans-serif;
+}
+
+
+.details_tab a, .details_tab a:visited{
+    color           : #30497c;
+    font            : bold 11px "Arial CE", "Helvetica CE", Arial, Helvetica, sans-serif;
+    text-decoration : none;
+}
+
+.details_tab a:hover, .details_tab a:active {
+    color           : #dd0000;
+    text-decoration : underline;
+}
+
+.details_tab p {
+    padding : 0px 20px 10px 20px;
+}
+
+#sorting {
+    position : absolute;
+}
+
+.blocker {
+    color           : #cc0000;
+    font-weight     : bold;
+}
+
+.critical {
+    color           : #cc0000;
+}
+
+.major {
+    color           : #880000;
+}
+
+.normal {
+    color           : #000000;
+}
+
+.minor {
+    color           : #444444;
+}
+
+.enhancement {
+    color           : #777777;
+}
+
+.img_arrow {
+    width   : 11px;
+    height  : 9px;
+}
