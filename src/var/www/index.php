@@ -158,7 +158,7 @@ if ($selected_statistic == '' || $selected_statistic == '-') {
         }
         
         $products_components = get_products_components("$DATA_FOLDER/$selected_statistic/$selected_product");
-        if ( $selected_component != "") {
+        if ( $selected_component != "" && $selected_component != $GRAPHS_FOR_ALL_COMPONENTS) {
             if ( ! in_array($selected_component, $products_components) )
             {
                 // selected component does not exist -> reload the page to show the product stats of selected statistics
@@ -304,6 +304,7 @@ if (file_exists("$DATA_FOLDER/$selected_statistic/$selected_product/$VARIABLES_F
                                     if ( count($products_components) > 0 ) {
                                         print "<li><a href='?s=$selected_statistic&p=$selected_product'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_", "and"), array(" ", "&"), $selected_product) . "</a>\n";
                                         print "<ul>\n";
+										print "<li><a href='?s=$selected_statistic&p=$selected_product&c=$GRAPHS_FOR_ALL_COMPONENTS'>$STR_GRAPHS_FOR_ALL_COMPONENTS</a></li>\n";
                                         foreach ($products_components as $component) {
                                             print "<li><a href='?s=$selected_statistic&p=$selected_product&c=$component'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_", "and"), array(" ", "&"), $component) . "</a></li>\n";
                                         }
@@ -322,6 +323,7 @@ if (file_exists("$DATA_FOLDER/$selected_statistic/$selected_product/$VARIABLES_F
                                         $products_components = get_products_components("$DATA_FOLDER/$selected_statistic/$product");
                                         if ( count($products_components) > 0 ) {
                                             print "<ul>\n";
+											print "<li><a href='?s=$selected_statistic&p=$product&c=$GRAPHS_FOR_ALL_COMPONENTS'>$STR_GRAPHS_FOR_ALL_COMPONENTS</a></li>\n";
                                             foreach ($products_components as $component) {
                                                 print "<li><a href='?s=$selected_statistic&p=$product&c=$component'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_", "and"), array(" ", "&"), $component) . "</a></li>\n";
                                             }
@@ -341,6 +343,7 @@ if (file_exists("$DATA_FOLDER/$selected_statistic/$selected_product/$VARIABLES_F
                                             $products_components = get_products_components("$DATA_FOLDER/$selected_statistic/$product");
                                             if ( count($products_components) > 0 ) {
                                                 print "<ul>\n";
+												print "<li><a href='?s=$selected_statistic&p=$product&c=$GRAPHS_FOR_ALL_COMPONENTS'>$STR_GRAPHS_FOR_ALL_COMPONENTS</a></li>\n";
                                                 foreach ($products_components as $component) {
                                                     print "<li><a href='?s=$selected_statistic&p=$product&c=$component'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_", "and"), array(" ", "&"), $component) . "</a></li>\n";
                                                 }
@@ -364,6 +367,7 @@ if (file_exists("$DATA_FOLDER/$selected_statistic/$selected_product/$VARIABLES_F
                     <input type='hidden' id='name_start_page' value='<?php print $START_PAGE; ?>' />
                     <input type='hidden' id='name_all_products' value='<?php print $ALL_PRODUCTS; ?>' />
                     <input type='hidden' id='name_graphs_all_products' value='<?php print $GRAPHS_FOR_ALL_PRODUCTS; ?>' />
+                    <input type='hidden' id='name_graphs_all_components' value='<?php print $GRAPHS_FOR_ALL_COMPONENTS; ?>' />
                 
                 </div>
                 <?php } ?>
@@ -382,6 +386,8 @@ if (file_exists("$DATA_FOLDER/$selected_statistic/$selected_product/$VARIABLES_F
                     require "generate_start_page.php";
                 } else if ($selected_product == $GRAPHS_FOR_ALL_PRODUCTS) {
                     require "generate_graphs_for_all_products.php";
+                } else if ($selected_component == $GRAPHS_FOR_ALL_COMPONENTS) {
+                    require "generate_graphs_for_all_components.php";
                 } else {
                     require "generate_statistics.php";
                 }

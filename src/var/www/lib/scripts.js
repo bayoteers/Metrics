@@ -193,12 +193,20 @@ $(document).ready(function(){
                 // generate separate graphs for each product - Note: it's heavy 
                 generate_graphs_for_all_products_response();
             }
-            else {
-                prev_row_id = null;
-                generate_statistics_graph();
-                show_changes_details(gEl('last_row').value, gEl('last_details_file').value, gEl('last_desc_table').value, gEl('last_snapshot_taken_time').value);
-            }
+	        else 
+	            if ($('#selected_component').val() === $('#name_graphs_all_components').val()) {
+	                // generate separate graphs for each component of a product 
+	                generate_graphs_for_all_components_response();
+	            }
+	            else {
+	                prev_row_id = null;
+	                generate_statistics_graph();
+	                show_changes_details(gEl('last_row').value, gEl('last_details_file').value, gEl('last_desc_table').value, gEl('last_snapshot_taken_time').value);
+	            }
 });
+
+
+
 
 function resize_elements() {
     // place the settings DIVs in the top-right corner of the screen 
@@ -348,6 +356,50 @@ function generate_graphs_for_all_products_response()
     while (iel != null)
     {
         generate_graph('stats_graph_img_' + i, gEl('stats_graph_' + i).value, "", width, height, false);
+        i += 1;
+        iel = gEl('stats_graph_img_' + i);
+    }
+}
+
+/*****************************/
+function generate_graphs_for_all_components_response() {
+    var width = 800;
+    var height = 500;
+    var div_width = 800;
+    var div_height = 500;
+
+    if ( gEl("graph_size_auto").value !== "1" && gEl("graph_autoresize_all_products_graphs").value === "1" )
+    {
+        width = new Number( gEl("graph_size_width").value );
+        height = new Number( gEl("graph_size_height").value );
+        div_width = width + 10;
+        div_height = height + 10;
+    }
+    else
+    {
+        var window_width = (IE) ? document.body.clientWidth : window.innerWidth;
+        width = window_width - 100;
+        width = (width / 3) - (width % 3);
+        height = width / 5 * 3;
+        div_width = width + 10;
+        div_height = height + 10;
+    }
+
+    var i = 0;
+    var iel = gEl('stats_graph_div_' + i);
+    while (iel != null)
+    {
+        iel.style.width  = div_width + "px";
+        iel.style.height = div_height + "px";
+        i += 1;
+        iel = gEl('stats_graph_div_' + i);
+    }
+
+    i = 0;
+    iel = gEl('stats_graph_img_' + i);
+    while (iel != null)
+    {
+        generate_graph('stats_graph_img_' + i, $('#selected_product').val(), gEl('stats_graph_' + i).value, width, height, false);
         i += 1;
         iel = gEl('stats_graph_img_' + i);
     }

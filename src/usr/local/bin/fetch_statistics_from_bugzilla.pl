@@ -422,6 +422,7 @@ $GLOBAL_VARIABLES = "";
 $GLOBAL_VARIABLES .= read_global_variable("STR_START_PAGE");
 $GLOBAL_VARIABLES .= read_global_variable("STR_ALL_PRODUCTS");
 $GLOBAL_VARIABLES .= read_global_variable("STR_GRAPHS_FOR_ALL_PRODUCTS");
+$GLOBAL_VARIABLES .= read_global_variable("STR_GRAPHS_FOR_ALL_COMPONENTS");
 $GLOBAL_VARIABLES .= read_global_variable("STR_PRODUCT");
 $GLOBAL_VARIABLES .= read_global_variable("STR_COMPONENT");
 $GLOBAL_VARIABLES .= read_global_variable("STR_CLASSIFICATION_COLUMN_NAME");

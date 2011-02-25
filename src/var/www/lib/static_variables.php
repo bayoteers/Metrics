@@ -14,7 +14,8 @@ require_once ("lib/jpgraph/jpgraph_ttf.inc.php");
 
 // ======================
 // Folder when data file are collected - it must be in sync with configuration of fetching data script. 
-$DATA_FOLDER = "data";
+$DATA_FOLDER = "..\\bugzilla_statistics_data";
+//$DATA_FOLDER = "/var/www/bugzilla_statistics/data";
 
 // ======================
 // Font used on graphs
@@ -36,6 +37,7 @@ $VARIABLES_FILE_NAME = "variables.php";
 $START_PAGE = "start_page";
 $ALL_PRODUCTS = "all";
 $GRAPHS_FOR_ALL_PRODUCTS = "graphs";
+$GRAPHS_FOR_ALL_COMPONENTS = "graphs";
 
 
 // ======================
@@ -45,6 +47,7 @@ $GRAPHS_FOR_ALL_PRODUCTS = "graphs";
 $STR_START_PAGE = "!! [start page]";
 $STR_ALL_PRODUCTS = "!! [all products - summary]";
 $STR_GRAPHS_FOR_ALL_PRODUCTS = "!! [graphs for all products]";
+$STR_GRAPHS_FOR_ALL_COMPONENTS = "!! [graphs for all components]";
 
 $STR_PRODUCT = "!! product";
 $STR_COMPONENT = "!! component";

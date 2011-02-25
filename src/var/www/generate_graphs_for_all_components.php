@@ -31,14 +31,15 @@ foreach ($s as $name) {
 if ($selected_product != "") {
     $link .= "&p=$selected_product";
     print "&nbsp;&nbsp;-&rarr;&nbsp;&nbsp;";
-    print "<a href='$link'>$STR_GRAPHS_FOR_ALL_PRODUCTS</a>";
+    print "<a href='$link'>" . str_replace(array("_", "and"), array(" ", "&"), $selected_product) . "</a>";
 }
 if ($selected_component != "") {
     $link .= "&c=$selected_component";
     print " / ";
-    print "<a href='$link'>" . str_replace(array("_", "and"), array(" ", "&"), $selected_component) . "</a>";
+    print "<a href='$link'>$STR_GRAPHS_FOR_ALL_COMPONENTS</a>";
 }
 print "</p></div>";
+
 ?>
 
 <!-- <hr/>  -->
@@ -50,19 +51,17 @@ print "</p></div>";
 <div id='stats_graphs'>
 <?php
 print "<div id='stats_graph_div_0' class='stats_graph2'>";
-print "<a href='?s=$selected_statistic&p=$ALL_PRODUCTS'><img id='stats_graph_img_0' src='img/loading.gif' alt='' title=\"Click on the graph to see details of $STR_ALL_PRODUCTS\"/></a>";
-print "<input id='stats_graph_0' type='hidden' value='$ALL_PRODUCTS' alt='' />";
+print "<a href='?s=$selected_statistic&p=$selected_product'><img id='stats_graph_img_0' src='img/loading.gif' alt='' title=\"Click on the graph to see details of '$selected_product'\"/></a>";
+print "<input id='stats_graph_0' type='hidden' value='' alt='' />";
 print "</div>";
 
 $i = 1;
-foreach ($products_list as $product)
-{
-    if ($product != $ALL_PRODUCTS) {
-        print "<div id='stats_graph_div_$i' class='stats_graph2'>";
-        print "<a href='?s=$selected_statistic&p=$product'><img id='stats_graph_img_$i' src='img/loading.gif' alt='' title=\"Click on the graph to see details of '$product'\"/></a>";
-        print "<input id='stats_graph_$i' type='hidden' value='$product' alt='' />";
-        print "</div>";
-    }
+$products_components = get_products_components("$DATA_FOLDER/$selected_statistic/$selected_product");
+foreach ($products_components as $component) {
+    print "<div id='stats_graph_div_$i' class='stats_graph2'>";
+    print "<a href='?s=$selected_statistic&p=$selected_product&c=$component'><img id='stats_graph_img_$i' src='img/loading.gif' alt='' title=\"Click on the graph to see details of '$selected_product / $component'\"/></a>";
+    print "<input id='stats_graph_$i' type='hidden' value='$component' alt='' />";
+    print "</div>";
     $i++;
 }
 ?>
