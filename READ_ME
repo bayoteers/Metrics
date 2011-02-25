@@ -1,0 +1,74 @@
+BAM - Bugzilla automated monitor
+=============================
+
+BAM is a tool to create daily statistics of bugs from Bugzilla.
+Tool fetches the snapshot of current statuses of selected bugs according to rules defined in the configuration and:
+- generate the information about number of unconfirmed / open / resoved / unreleased / unverified / active bugs.
+- compare the snapshot with the previous one and generate the information about changes in bug statuses
+  (how many bugs have been reported / resolved / released / verified).
+
+The idea is that statistics are generated every day morning and presents:
+- the status in the time when they have been generated.
+- changes in bugs' statuses in previous day.
+So e.g.:
+- the statistics generated in Tuesday morning, week 7 are visible on the web page as statistics from Monday, week 7.
+- the statistics generated in Monday morning, week 8 are visible on the web page as statistics from Sunday, week 7
+  (or e.g. Fri-Sun, week 7, when statistics are taken in working days only).
+
+
+
+CONFIGURATION:
+=============================
+
+1/ Create the user for fetching data from Bugzilla, e.g. bugstats
+
+2/ Copy the content of the 'src' to corect folders
+
+3/ Configure Apache
+
+4/ Create configuration files for statistics you want to fetch.
+
+
+------------------
+Apache:
+
+1/ PHP module must be installed for apache
+
+2/ GD extension must be enabled in php
+
+3/ Fonts (to generate graphs): packages: ttf-dejavu, ttf-dejavu-core
+   You can change font used on graphs in lib/static_variables.php
+
+4/ parameters file: lib/static_variables.php
+   You must update variables of default strings visible on page.
+   If you don't do that then each configurable string will be preceded with "!!" characters.
+
+
+
+------------------
+perl script:
+
+1/ Prepare configuration files (see example files).
+   You can generate the products list file by executing 'check_product_list_of_classification.pl' script with additional parameters.
+
+2/ Add proper line to the /usr/local/bin/fetch_statistics.sh file.
+
+3/ Set credentials to access the Bugzilla in .netrc file of the home directory of the user running perls script.
+   Format: machine projects.maemo.org login xxxxx password xxxxxx
+   chmod 600 .netrc
+
+4/ Create the 'data' folder for statistics (the one defined under STATISTICS_BASE_PATH variable) and ensure that user running perl scripts has access to write to this folder.
+
+5/ Create the cron file (see example file); define EMAIL [, REPLYTO, proxy, if you need] in the cron file.
+   In the example cron executes the /usr/local/bin/fetch_statistics.sh script, in which is defined what reall should be done.
+
+
+------------------
+To create new statistics:
+
+1/ create new config file(s).
+
+2/ add new line to the /usr/local/bin/fetch_statistics.sh file.
+
+================================
+
