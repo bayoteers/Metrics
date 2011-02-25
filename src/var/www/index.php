@@ -173,13 +173,47 @@ $title = "BAM";
 if ($selected_statistic != '' && $selected_statistic != '-') {
 	$title .= " (" . str_replace(array("_", "and"), array(" ", "&"), $selected_statistic);
 	if ($selected_product != "") {
-		$title .= " / " . ($selected_product===$ALL_PRODUCTS ? $STR_ALL_PRODUCTS : str_replace(array("_", "and"), array(" ", "&"), $selected_product));
-		if ($selected_component != "") {
-			$title .= " / " . str_replace(array("_", "and"), array(" ", "&"), $selected_component);
-		}
+		$title .= " / ";
+		if ($selected_product == $START_PAGE) {
+            $title .= $STR_START_PAGE;
+        } else if ($selected_product == $GRAPHS_FOR_ALL_PRODUCTS) {
+            $title .= $STR_GRAPHS_FOR_ALL_PRODUCTS;
+        } else if ($selected_product == $ALL_PRODUCTS) {
+            $title .= $STR_ALL_PRODUCTS;
+        } else if ($selected_component == $GRAPHS_FOR_ALL_COMPONENTS) {
+        	$title .= str_replace(array("_", "and"), array(" ", "&"), "$selected_product / $STR_GRAPHS_FOR_ALL_COMPONENTS");
+		} else if ($selected_component != '') {
+            $title .= str_replace(array("_", "and"), array(" ", "&"), "$selected_product / $selected_component");
+        } else {
+            $title .= str_replace(array("_", "and"), array(" ", "&"), $selected_product);
+        }
 	}
 	$title .= ")";
 }
+
+        if ($selected_product == $START_PAGE) {
+            $selected_product_name = $STR_START_PAGE;
+        } else if ($selected_product == $GRAPHS_FOR_ALL_PRODUCTS) {
+            $selected_product_name = $STR_GRAPHS_FOR_ALL_PRODUCTS;
+        } else if ($selected_product == $ALL_PRODUCTS) {
+            $selected_product_name = $STR_ALL_PRODUCTS;
+        } else if ($selected_component == $GRAPHS_FOR_ALL_COMPONENTS) {
+        	$selected_product_name = str_replace(array("_", "and"), array(" ", "&"), "$selected_product / $STR_GRAPHS_FOR_ALL_COMPONENTS");
+            if (count($products_list) > 15) {
+                $create_component_menu = true;
+            }
+		} else if ($selected_component != '') {
+            $selected_product_name = str_replace(array("_", "and"), array(" ", "&"), "$selected_product / $selected_component");
+            if (count($products_list) > 15) {
+                $create_component_menu = true;
+            }
+        } else {
+            $selected_product_name = str_replace(array("_", "and"), array(" ", "&"), $selected_product);
+            if (count($products_list) > 15) {
+                $create_component_menu = true;
+            }
+        }
+
 
 // global variables' file for particular statistic 
 if (file_exists("$DATA_FOLDER/$selected_statistic/$VARIABLES_FILE_NAME") ) {
@@ -286,7 +320,12 @@ if (file_exists("$DATA_FOLDER/$selected_statistic/$selected_product/$VARIABLES_F
                                 $selected_product_name = $STR_GRAPHS_FOR_ALL_PRODUCTS;
                             } else if ($selected_product == $ALL_PRODUCTS) {
                                 $selected_product_name = $STR_ALL_PRODUCTS;
-                            } else if ($selected_component != '') {
+                            } else if ($selected_component == $GRAPHS_FOR_ALL_COMPONENTS) {
+                            	$selected_product_name = str_replace(array("_", "and"), array(" ", "&"), "$selected_product / $STR_GRAPHS_FOR_ALL_COMPONENTS");
+                                if (count($products_list) > 15) {
+                                    $create_component_menu = true;
+                                }
+							} else if ($selected_component != '') {
                                 $selected_product_name = str_replace(array("_", "and"), array(" ", "&"), "$selected_product / $selected_component");
                                 if (count($products_list) > 15) {
                                     $create_component_menu = true;
