@@ -214,6 +214,10 @@ sub read_snapshot_file
 	open(INFILE, "<", $input_file);
 	while ( $line = <INFILE> )
 	{
+		if ($line eq "") {
+			next;
+		}
+		
 		$line_no += 1;
 		#print "$line\n";
 		$line =~ s/(.*)\s$/$1/g;
@@ -436,7 +440,7 @@ sub compare_snapshots
 				{
 					# no changes, bug still not resolved
 				}
-				elsif ($bug_prev_status eq $STATUS_OPEN || $bug_prev_status eq $STATUS_FIXED || $bug_prev_status eq $STATUS_RELEASED || $bug_prev_status eq $STATUS_CLOSED)
+				elsif ($bug_prev_status eq $STATUS_FIXED || $bug_prev_status eq $STATUS_RELEASED || $bug_prev_status eq $STATUS_CLOSED)
 				{
 					# bug has been reopened
 					add_to_results($STATUS_REOPENED, $bug_details, $subgroup_name);
@@ -625,6 +629,8 @@ sub add_to_results() {
 		$subgroup_name =~ s/!//g;
 		$subgroup_name =~ s/\(/_/g;
 		$subgroup_name =~ s/\)/_/g;
+		$subgroup_name =~ s/\[/_/g;
+		$subgroup_name =~ s/\]/_/g;
 		$subgroup_name =~ s/\//and/g;
 		$subgroup_name =~ s/&/and/g;
 		$subgroup_name =~ s/&amp;/and/g;
