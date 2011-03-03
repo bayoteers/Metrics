@@ -7,7 +7,7 @@ Tool fetches the snapshot of current statuses of selected bugs according to rule
 - compare the snapshot with the previous one and generate the information about changes in bug statuses
   (how many bugs have been reported / resolved / released / verified).
 
-The idea is that statistics are generated every day morning and presents:
+The idea is that statistics are generated every day early morning and presents:
 - the status in the time when they have been generated.
 - changes in bugs' statuses in previous day.
 So e.g.:
