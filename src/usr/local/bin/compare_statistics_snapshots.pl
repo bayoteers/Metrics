@@ -18,7 +18,7 @@ usage: compare_snapshots.pl -d|-w <config file> <product> <snapshot file 1>|none
 	<config file> - config file - full path
 	<product> = product name (subfolder name)
 	<snapshot file 1>, <snapshot file 2> - CSV shapshot files from bugzilla (raw data) - name without path
-	<not_verifiable_bugs> - optional parameter: list of resolved bug IDs, which cannot be currently verified
+	<not_verifiable_bugs_file_name> - full path to the file with list of resolved bug IDs, which cannot be currently verified becasue of open dependencies
 
 This script compares <snapshot file 1> with <snapshot file 2> and calculate the changes in bugs' statuses between these files.
 
@@ -26,7 +26,7 @@ In case when there is only one file, use "none" as a <snapshot file 1> - in such
 
 !END!
 
-die "ERROR: expected 5 or 6 arguments - you have provided " . ($#ARGV+1) . " arguments..\n$help" unless ($#ARGV > 3);
+die "ERROR: expected 6 arguments - you have provided " . ($#ARGV+1) . " arguments..\n$help" unless ($#ARGV > 4);
 die "ERROR: Found '".$ARGV[0]."' when expected '-d' or '-w' - exit." unless ($ARGV[0] eq "-d" or $ARGV[0] eq "-w");
 
 if ($ARGV[0] eq "-h" || $ARGV[0] eq "--help") {
@@ -40,15 +40,20 @@ $CONFIG_FILE = $ARGV[1];
 $PRODUCT = $ARGV[2];
 $SNAPSHOT_FILE_1 = $ARGV[3];
 $SNAPSHOT_FILE_2 = $ARGV[4];
+$BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME = $ARGV[5];
 $BUGS_WHICH_CANNOT_BE_VERIFIED = "";
-if ($#ARGV > 4) {
-	$BUGS_WHICH_CANNOT_BE_VERIFIED = $ARGV[5];
+open(DEPFILE, "<", "$BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME") || fatal("can't open a file for reading: $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME");
+while ( $a = <DEPFILE> )
+{
+	$BUGS_WHICH_CANNOT_BE_VERIFIED .= $a;
 }
+close DEPFILE;
 
 die "ERROR: Config file does not exists: $CONFIG_FILE - exit." unless (-e $CONFIG_FILE);
 
 # 'Static' variables - it's better to not touch them
 $RAW_DATA_DIR = "raw_data";
+$ALL_PRODUCTS_DIR = "all";
 $STATS_OUTFILE = "weekly_stats";
 if ($DAILY_STATS == 1) {
 	$STATS_OUTFILE = "daily_stats";
@@ -313,7 +318,7 @@ sub read_snapshot_file
 				$output_array{$bug_id}{"releaseable"} = 1;
 			}
 			
-			if ( match_to_the_rule($STATUS_DEPENDS_ON_DEPENDENCIES, @elements) == 1 && index($BUGS_WHICH_CANNOT_BE_VERIFIED, "$bug_id,") > -1) {
+			if ( match_to_the_rule($STATUS_DEPENDS_ON_DEPENDENCIES, @elements) == 1 && index($BUGS_WHICH_CANNOT_BE_VERIFIED, ",$bug_id,") > -1) {
 				$output_array{$bug_id}{"verifiable"} = 0;
 			}
 
@@ -624,7 +629,7 @@ sub add_to_results() {
 	$results{"all_bugs"}{$type}{'count'}++;
 	$results{"all_bugs"}{$type}{'list'} .= "$type$bug_details";
 	
-	if ( $subgroup_name ne "") {
+	if ( $PRODUCT ne $ALL_PRODUCTS_DIR && $subgroup_name ne "" ) {
 		$subgroup_name =~ s/ /_/g;
 		$subgroup_name =~ s/!//g;
 		$subgroup_name =~ s/\(/_/g;

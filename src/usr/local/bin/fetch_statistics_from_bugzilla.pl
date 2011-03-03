@@ -29,6 +29,11 @@ This script fetches new snapshot of bugs from Bugzilla and prepares data for pri
 !END!
 
 
+# TEMPORARY TO BE REMOVED IN FEW DAYS
+$TMP_create_prev_d_raw = 0;
+$TMP_create_prev_w_raw = 0;
+
+
 if ($#ARGV != 0) {
 	print "ERROR: too few or too many argument(s)\n$help";
 	exit -1;
@@ -87,6 +92,7 @@ $MAIL_TO = read_config_entry("MAIL_TO", "can be empty");
 $ADMIN_MAIL = read_config_entry("ADMIN_MAIL");
 $SENT_EMAIL_NOTIFICATION = read_config_entry("SENT_EMAIL_NOTIFICATION");
 $INCOMPLETE_CLASSIFICATION = read_config_entry("INCOMPLETE_CLASSIFICATION", "can be empty");
+$BUGS_DEPENDS_ON_DEPENDENCIES_STR = read_config_entry("BUGS_DEPENDS_ON_DEPENDENCIES", "can be empty");
 
 if (! -e $TMP_DIR) {
 	if (!mkdir $TMP_DIR) {
@@ -105,6 +111,10 @@ $RAW_DATA_DIR = "raw_data";
 $ALL_PRODUCTS_DIR = "all";
 $DAILY_STATS_HISTORY_FILE_NAME = "daily_stats";
 $WEEKLY_STATS_HISTORY_FILE_NAME = "weekly_stats";
+$BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME = "$STATS_FOLDER/bugs_with_dependencies";
+if ($SUBSET_OF ne "") {
+	$BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME = "$PARENT_STATS_FOLDER/bugs_with_dependencies";
+}
 
 
 
@@ -125,13 +135,10 @@ $errors = "";
 $PRODUCTS_LIST = "";
 read_products_list();
 
-# bugs which cannot be verified becasue of open dependencies
-$BUGS_WHICH_CANNOT_BE_VERIFIED = "";
-$BUGS_DEPENDS_ON_DEPENDENCIES_STR = read_config_entry("BUGS_DEPENDS_ON_DEPENDENCIES", "can be empty");
 %columns_array = ();
 
 if ($SUBSET_OF eq "" && $BUGS_DEPENDS_ON_DEPENDENCIES_STR ne "") {
-	# variables needed to check dependencies of bugs to check if they can be verified
+	# read list of bugs which cannot be verified becasue of open dependencies
 	@BUGS_DEPENDS_ON_DEPENDENCIES = read_config_rule($BUGS_DEPENDS_ON_DEPENDENCIES_STR, 0);
 	@BUGZILLA_URL_BUGS_WITH_DEPENDENCIES_EXT = create_bugzilla_params_from_rule(@BUGS_DEPENDS_ON_DEPENDENCIES);
 	$BUGZILLA_URL_BUGS_WITH_DEPENDENCIES_BASE = "buglist.cgi?ctype=csv&field0-0-0=dependson&type0-0-0=regexp&value0-0-0=.%2B" . create_bugzilla_param_column_list(@BUGS_DEPENDS_ON_DEPENDENCIES);
@@ -191,12 +198,15 @@ if ($SUBSET_OF eq "" && $BUGS_DEPENDS_ON_DEPENDENCIES_STR ne "") {
 			$dependencies_list .= $BUG{"bug_id"} . ",";
 		}
 		close FILE1;
-		$BUGS_WHICH_CANNOT_BE_VERIFIED = check_bugs_dependencies( $dependencies_list );
+		$bugs_which_cannot_be_verified = check_bugs_dependencies( $dependencies_list );
+		
+		open(DEPFILE, ">", "$BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME") || die "ERROR: can't open a file for writing: $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME";
+		print DEPFILE "$bugs_which_cannot_be_verified\n";
+		close DEPFILE;
 	}
 }
 
 # ==================================================
-
 for $product ( sort (keys %PRODUCTS) )
 {
 	$product_name = $product;
@@ -267,6 +277,36 @@ for $product ( sort (keys %PRODUCTS) )
 		if (! -e $snapshot_output_dir) {
 			fatal("Variable 'SUBSET_OF' is defined, but I cannot find the RAW_DATA dir for product: '$snapshot_output_dir':");
 		}
+
+		# find last and previous snapshot files (previous day for daily stats and last Monday for weekly stats)
+		$snapshot_output_file = "";
+		$prev_snapshot_daily = "none";
+		$prev_snapshot_weekly = "none";
+		opendir(S_DIR, $snapshot_output_dir);
+		foreach my $s ( sort {$b cmp $a} (readdir S_DIR ) )
+		{
+			if (-d "$snapshot_output_dir/$s" || $s eq $snapshot_output_file || $s eq ".." || $s eq ".") {
+				next;
+			}
+			if ($snapshot_output_file eq "") {
+				# read today snapshot file -> this part of code should be executed only when ($SUBSET_OF ne "")
+				$snapshot_output_file = $s;
+			} else {
+				# previous daily snapshot (previous day)
+				if ($prev_snapshot_daily eq "none") {
+					$prev_snapshot_daily = $s;
+				}
+				# previous weekly snapshot (last Monday)
+				($year, $month, $day, $hour, $minute) = ($s =~ /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)\.csv/);
+				$dow = strftime "%u", (0, $minute, $hour, $day, $month-1, $year-1900);
+				if ($dow == 1) {
+					$prev_snapshot_weekly = $s;
+					last;
+				}
+			}
+		}
+		closedir S_DIR;
+
 	}
 	else
 	{
@@ -290,7 +330,7 @@ for $product ( sort (keys %PRODUCTS) )
 		}
 		info("Get snapshot for $product, save it in $snapshot_output_dir/$snapshot_output_file");
 		execute_command("wget $WGET_EXTRA_PARAMETERS -O $snapshot_output_dir/$snapshot_output_file \"$bugzilla_request_active\"");
-		execute_command("echo >> $snapshot_output_dir/$snapshot_output_file");
+		execute_command("echo '' >> $snapshot_output_dir/$snapshot_output_file");
 		execute_command("wget $WGET_EXTRA_PARAMETERS -O $TMP_DIR/$snapshot_output_file \"$bugzilla_request_closed\"");
 		execute_command("cat $TMP_DIR/$snapshot_output_file >> $snapshot_output_dir/$snapshot_output_file");
 		execute_command("rm $TMP_DIR/$snapshot_output_file");
@@ -321,7 +361,7 @@ for $product ( sort (keys %PRODUCTS) )
 					next;
 				}
 				if ($snapshot_output_file eq "") {
-					# read todays snapshot file -> this part of code should be executed only when ($SUBSET_OF ne "")
+					# read today snapshot file -> this part of code should be executed only when ($SUBSET_OF ne "")
 					$snapshot_output_file = $s;
 				} else {
 					# previous daily snapshot (previous day)
@@ -342,7 +382,7 @@ for $product ( sort (keys %PRODUCTS) )
 			# compare just fetched snapshot with previous one - prepare data for printing them on the web page (daily view)
 			info("compare just fetched snapshot with previous one - prepare data for printing them on the web page");
 			info("daily view: $product: $prev_snapshot_daily <-> $snapshot_output_file");
-			$ret = execute_command("compare_statistics_snapshots.pl -d $CONFIG_FILE $product $prev_snapshot_daily $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED");
+			$ret = execute_command("compare_statistics_snapshots.pl -d $CONFIG_FILE $product $prev_snapshot_daily $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME");
 			if ($ret =~ /ERROR/) {
 				# TODO - if the file does not contain the header line then wget failed and file should be removed... shoud be..?
 				$errors .= $ret . "\n";
@@ -354,7 +394,7 @@ for $product ( sort (keys %PRODUCTS) )
 
 			# compare just fetched snapshot with previous one - prepare data for printing them on the web page (weekly view)
 			info("weekly view: $product: $prev_snapshot_weekly <-> $snapshot_output_file");
-			$ret = execute_command("compare_statistics_snapshots.pl -w $CONFIG_FILE $product $prev_snapshot_weekly $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED");
+			$ret = execute_command("compare_statistics_snapshots.pl -w $CONFIG_FILE $product $prev_snapshot_weekly $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME");
 			if ($ret =~ /ERROR/) {
 				$errors .= $ret . "\n";
 			}
@@ -362,7 +402,86 @@ for $product ( sort (keys %PRODUCTS) )
 			$changes_outfile_week = $ret_c[1];
 		}
 	}
+	
+	if (! -e "$STATS_FOLDER/$ALL_PRODUCTS_DIR") {
+		if (!mkdir "$STATS_FOLDER/$ALL_PRODUCTS_DIR") {
+			fatal("Cannot create folder '$STATS_FOLDER/$ALL_PRODUCTS_DIR': $!");
+		}
+	}
+	if (! -e "$STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR") {
+		if (!mkdir "$STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR") {
+			fatal("Cannot create folder '$STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR': $!");
+		}
+	}
+	# prepare raw data file in ALL_PRODUCTS_DIR
+	execute_command("cat $snapshot_output_dir/$snapshot_output_file >> $STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$snapshot_output_file");
+	execute_command("echo '' >> $STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$snapshot_output_file");
+
+	if ($TMP_create_prev_d_raw == 1 || ! -e "$STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$prev_snapshot_daily") {
+		if ($prev_snapshot_daily ne "none") {
+			execute_command("cat $snapshot_output_dir/$prev_snapshot_daily >> $STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$prev_snapshot_daily");
+			execute_command("echo '' >> $STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$prev_snapshot_daily");
+			$TMP_create_prev_d_raw = 1;
+		}
+	}
+
+	if ($TMP_create_prev_w_raw == 1 || ! -e "$STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$prev_snapshot_weekly") {
+		if ($prev_snapshot_weekly ne "none") {
+			execute_command("cat $snapshot_output_dir/$prev_snapshot_weekly >> $STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$prev_snapshot_weekly");
+			execute_command("echo '' >> $STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$prev_snapshot_weekly");
+			$TMP_create_prev_w_raw = 1;
+		}
+	}
 }
+
+
+# 'ALL PRODUCTS' PART
+# find the previous snapshot files (previous day for daily stats and last Monday for weekly stats
+$snapshot_output_file = "";
+$prev_snapshot_daily = "none";
+$prev_snapshot_weekly = "none";
+$snapshot_output_dir = "$STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR";
+opendir(S_DIR, $snapshot_output_dir);
+foreach my $s ( sort {$b cmp $a} (readdir S_DIR ) )
+{
+	if (-d "$snapshot_output_dir/$s" || $s eq $snapshot_output_file || $s eq ".." || $s eq ".") {
+		next;
+	}
+	if ($snapshot_output_file eq "") {
+		# read today snapshot file -> this part of code should be executed only when ($SUBSET_OF ne "")
+		$snapshot_output_file = $s;
+	} else {
+		# previous daily snapshot (previous day)
+		if ($prev_snapshot_daily eq "none") {
+			$prev_snapshot_daily = $s;
+		}
+		# previous weekly snapshot (last Monday)
+		($year, $month, $day, $hour, $minute) = ($s =~ /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)\.csv/);
+		$dow = strftime "%u", (0, $minute, $hour, $day, $month-1, $year-1900);
+		if ($dow == 1) {
+			$prev_snapshot_weekly = $s;
+			last;
+		}
+	}
+}
+closedir S_DIR;
+
+# compare new snapshot with previous one for ALL PRODUCTS - prepare data for printing them on the web page (daily view)
+info("compare new snapshot with previous one for ALL PRODUCTS - prepare data for printing them on the web page");
+info("daily view: ALL PRODUCTS: $prev_snapshot_daily <-> $snapshot_output_file");
+$ret = execute_command("compare_statistics_snapshots.pl -d $CONFIG_FILE $ALL_PRODUCTS_DIR $prev_snapshot_daily $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME");
+if ($ret =~ /ERROR/) {
+	# TODO - if the file does not contain the header line then wget failed and file should be removed... shoud be..?
+	$errors .= $ret . "\n";
+}
+
+# compare new snapshot with previous one for ALL PRODUCTS - prepare data for printing them on the web page (weekly view)
+info("weekly view: ALL PRODUCTS: $prev_snapshot_weekly <-> $snapshot_output_file");
+$ret = execute_command("compare_statistics_snapshots.pl -w $CONFIG_FILE $ALL_PRODUCTS_DIR $prev_snapshot_weekly $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME");
+if ($ret =~ /ERROR/) {
+	$errors .= $ret . "\n";
+}
+
 
 # create '$VARIABLES_FILE_NAME' file for all monitored products
 if (! -e "$STATS_FOLDER/$ALL_PRODUCTS_DIR") {
@@ -385,37 +504,6 @@ print OUTFILE "\$BUGS_NOT_CONFIRMED = '" . (create_bugzilla_params_from_rule(@BU
 print OUTFILE "?>";
 close (OUTFILE);
 
-if ($SUBSET_OF ne "")
-{
-	# read $changes_outfile_day $changes_outfile_week variables, $week_day
-	open(STATSFILE, "<", "$PARENT_STATS_FOLDER/$ALL_PRODUCTS_DIR/$DAILY_STATS_HISTORY_FILE_NAME") || fatal("can't open a file for reading: $PARENT_STATS_FOLDER/$ALL_PRODUCTS_DIR/$DAILY_STATS_HISTORY_FILE_NAME");
-	while ( $a = <STATSFILE> )
-	{
-		my @columns = split(";;;", $a);
-		$week_day = $columns[0];
-		$changes_outfile_day = $columns[2];
-	}
-	close STATSFILE;
-
-	open(STATSFILE, "<", "$PARENT_STATS_FOLDER/$ALL_PRODUCTS_DIR/$WEEKLY_STATS_HISTORY_FILE_NAME") || fatal("can't open a file for reading: $PARENT_STATS_FOLDER/$ALL_PRODUCTS_DIR/$WEEKLY_STATS_HISTORY_FILE_NAME");
-	while ( $a = <STATSFILE> )
-	{
-		my @columns = split(";;;", $a);
-		$changes_outfile_week = $columns[2];
-	}
-	close STATSFILE;
-}
-
-# prepare summary statistics file for all monitored products
-info("prepare summary statistics for all monitored products");
-$ret = execute_command("update_all_products_statistics.pl -d $CONFIG_FILE $changes_outfile_day");
-if ($ret =~ /ERROR/) {
-	$errors .= $ret . "\n";
-}
-$ret = execute_command("update_all_products_statistics.pl -w $CONFIG_FILE $changes_outfile_week");
-if ($ret =~ /ERROR/) {
-	$errors .= $ret . "\n";
-}
 
 # create global variables.php file
 $GLOBAL_VARIABLES = "";
@@ -577,7 +665,7 @@ sub check_bugs_dependencies() {
 		}
 		close FILE1;
 	}
-	$ret = "";
+	$ret = ",";
 	foreach $b_id ( sort (keys %b) ) {
 		$out = 1;
 		@db = split(",", $b{$b_id});
