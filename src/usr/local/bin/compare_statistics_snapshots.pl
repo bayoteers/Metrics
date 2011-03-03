@@ -219,6 +219,8 @@ sub read_snapshot_file
 	open(INFILE, "<", $input_file);
 	while ( $line = <INFILE> )
 	{
+		$line =~ s/^\s+//;
+		$line =~ s/\s+$//;
 		if ($line eq "") {
 			next;
 		}
