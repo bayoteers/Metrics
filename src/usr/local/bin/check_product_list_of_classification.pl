@@ -183,7 +183,7 @@ sub read_existing_folders_list {
 	@EXISTING_FOLDERS = ();
 	if ( opendir(DIR, "$STATISTICS_PATH") ) {
 		while( ($f = readdir(DIR))){
-			if ( $f eq "all" || $f =~ /^\.+$/) {
+			if ( $f eq "all" || $f eq "bugs_with_dependencies" || $f =~ /^\.+$/) {
 				next;
 			}
 			push (@EXISTING_FOLDERS, $f);
