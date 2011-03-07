@@ -121,6 +121,7 @@ if ($SUBSET_OF ne "") {
 chomp($time = `date +"%Y-%m-%d_%H-%M"`);
 chomp($time_email = `date +"%Y-%m-%d %H:%M"`);
 chomp($week_day = `date +"W%V, %A"`);
+chomp($day_of_week = `date +"%u"`);
 $snapshot_output_file = "$time.csv";
 if ($SUBSET_OF ne "") {
 	$snapshot_output_file = "";
@@ -324,7 +325,8 @@ for $product ( sort (keys %PRODUCTS) )
 		# this is a workaround
 		$bugzilla_request_closed = $bugzilla_request;
 		if ( create_bugzilla_param_column_list(@BUGS_CLOSED) eq "&columnlist=,bug_status,") {
-			$bugzilla_request_closed .= "&chfield=bug_status&chfieldfrom=5d&chfieldto=Now" . (create_bugzilla_params_from_rule(@BUGS_CLOSED))[0];
+			# ($day_of_week==1) - on Monday fetch data from last 8 days, on other days from last 5 days.
+			$bugzilla_request_closed .= "&chfield=bug_status&chfieldfrom=" . ($day_of_week eq "1" ? "8" : "5") . "d&chfieldto=Now" . (create_bugzilla_params_from_rule(@BUGS_CLOSED))[0];
 		} else {
 			$bugzilla_request_closed .= (create_bugzilla_params_from_rule(@BUGS_CLOSED))[0];
 		}

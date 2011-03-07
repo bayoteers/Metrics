@@ -413,13 +413,11 @@ sub compare_snapshots
 		my $bug_releaseable = $snapshot_new{$bug_id}{"releaseable"};
 		my $bug_verifiable = $snapshot_new{$bug_id}{"verifiable"};
 		my $bug_prev_status = "";
-		my $bug_prev_releaseable = 0;
 		
 		#print "$bug_id, $bug_status, $bug_not_confirmed, $bug_releaseable, $bug_verifiable | $bug_prev_status ($bug_details";
 		
 		if ( $SNAPSHOT_FILE_1 ne "none" && exists $snapshot_prev{$bug_id} ) {
 			$bug_prev_status = $snapshot_prev{$bug_id}{"status"};
-			$bug_prev_releaseable = $snapshot_prev{$bug_id}{"releaseable"};
 		}
 
 		my $subgroup_name = "";
@@ -440,7 +438,7 @@ sub compare_snapshots
 			{
 				if ( $bug_prev_status eq "" )
 				{
-					# bug is new
+					# bug has been reported
 					add_to_results($STATUS_NEW, $bug_details, $subgroup_name);
 				}
 				elsif ($bug_prev_status eq $STATUS_OPEN)
@@ -473,7 +471,7 @@ sub compare_snapshots
 			{
 				if ($bug_prev_status eq "")
 				{
-					# bug is new and resolved
+					# bug has been reported, resolved
 					add_to_results($STATUS_NEW, $bug_details, $subgroup_name);
 					add_to_results($STATUS_RESOLVED, $bug_details, $subgroup_name);
 				}
@@ -511,7 +509,7 @@ sub compare_snapshots
 			{
 				if ($bug_prev_status eq "")
 				{
-					# bug is new, resolved and released
+					# bug has been reported, resolved and released
 					add_to_results($STATUS_NEW, $bug_details, $subgroup_name);
 					add_to_results($STATUS_RESOLVED, $bug_details, $subgroup_name);
 					add_to_results($STATUS_RELEASED, $bug_details, $subgroup_name);
@@ -551,20 +549,20 @@ sub compare_snapshots
 			{
 				if ($bug_prev_status eq "")
 				{
-					# bug is new, resolved, released (if it's releaseable) and verified/closed - IGNORE IT
-					#add_to_results($STATUS_NEW, $bug_details, $subgroup_name);
-					#add_to_results($STATUS_RESOLVED, $bug_details, $subgroup_name);
-					#add_to_results($STATUS_CLOSED, $bug_details, $subgroup_name);
-					#if ($bug_prev_releaseable == 1) {
-					#	add_to_results($STATUS_RELEASED, $bug_details, $subgroup_name);
-					#}
+					# bug has been reported, resolved and released (if it's releaseable) and verified/closed
+					add_to_results($STATUS_NEW, $bug_details, $subgroup_name);
+					add_to_results($STATUS_RESOLVED, $bug_details, $subgroup_name);
+					add_to_results($STATUS_CLOSED, $bug_details, $subgroup_name);
+					if ($bug_releaseable == 1) {
+						add_to_results($STATUS_RELEASED, $bug_details, $subgroup_name);
+					}
 				}
 				elsif ($bug_prev_status eq $STATUS_OPEN)
 				{
 					# bug has been resolved and released (if it's releaseable) and verified/closed
 					add_to_results($STATUS_RESOLVED, $bug_details, $subgroup_name);
 					add_to_results($STATUS_CLOSED, $bug_details, $subgroup_name);
-					if ($bug_prev_releaseable == 1) {
+					if ($bug_releaseable == 1) {
 						add_to_results($STATUS_RELEASED, $bug_details, $subgroup_name);
 					}
 				}
@@ -572,7 +570,7 @@ sub compare_snapshots
 				{
 					# bug has been released (if it's releaseable) and verified/closed
 					add_to_results($STATUS_CLOSED, $bug_details, $subgroup_name);
-					if ($bug_prev_releaseable == 1) {
+					if ($bug_releaseable == 1) {
 						add_to_results($STATUS_RELEASED, $bug_details, $subgroup_name);
 					}
 				}
@@ -610,7 +608,7 @@ sub compare_snapshots
 				$bug_prev_status = $snapshot_prev{$bug_id}{"status"};
 				if ($bug_prev_status ne "" && $bug_prev_status ne $STATUS_CLOSED && $bug_prev_status ne $STATUS_UNKNOWN)
 				{
-					# bug moved out to another product | specific keyword / flag has been removed
+					# bug moved out to another product | specific keyword / flag has been removed / etc.
 					my $subgroup_name = "";
 					if ( $SUBGROUPS_COLUMN_NAME ne "" && ! exists $output{$snapshot_prev{$bug_id}{"subgroup_name"}} ) {
 						$subgroup_name = $snapshot_prev{$bug_id}{"subgroup_name"};
