@@ -26,7 +26,7 @@ In case when there is only one file, use "none" as a <snapshot file 1> - in such
 
 !END!
 
-die "ERROR: expected 6 arguments - you have provided " . ($#ARGV+1) . " arguments..\n$help" unless ($#ARGV > 4);
+die "ERROR: expected 5 or 6 arguments - you have provided " . ($#ARGV+1) . " arguments..\n$help" unless ($#ARGV > 3);
 die "ERROR: Found '".$ARGV[0]."' when expected '-d' or '-w' - exit." unless ($ARGV[0] eq "-d" or $ARGV[0] eq "-w");
 
 if ($ARGV[0] eq "-h" || $ARGV[0] eq "--help") {
@@ -40,14 +40,16 @@ $CONFIG_FILE = $ARGV[1];
 $PRODUCT = $ARGV[2];
 $SNAPSHOT_FILE_1 = $ARGV[3];
 $SNAPSHOT_FILE_2 = $ARGV[4];
-$BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME = $ARGV[5];
 $BUGS_WHICH_CANNOT_BE_VERIFIED = "";
-open(DEPFILE, "<", "$BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME") || fatal("can't open a file for reading: $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME");
-while ( $a = <DEPFILE> )
-{
-	$BUGS_WHICH_CANNOT_BE_VERIFIED .= $a;
+if ($#ARGV > 4) {
+	$BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME = $ARGV[5];
+	open(DEPFILE, "<", "$BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME") || fatal("can't open a file for reading: $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME");
+	while ( $a = <DEPFILE> )
+	{
+		$BUGS_WHICH_CANNOT_BE_VERIFIED .= $a;
+	}
+	close DEPFILE;
 }
-close DEPFILE;
 
 die "ERROR: Config file does not exists: $CONFIG_FILE - exit." unless (-e $CONFIG_FILE);
 
@@ -62,6 +64,7 @@ if ($DAILY_STATS == 1) {
 $COMMON_PARAMS_FILE = read_config_entry("COMMON_PARAMS_FILE");
 $OUTPUT_PATH = read_config_entry("STATISTICS_BASE_PATH") . "/" . read_config_entry("STATISTICS") . "/" . $PRODUCT;
 $SNAPSHOTS_PATH = $OUTPUT_PATH . "/" . $RAW_DATA_DIR;
+$RUN_FEW_TIMES_A_DAY = read_config_entry("RUN_FEW_TIMES_A_DAY", "can be empty", "false");
 
 $BUGZILLA_SNAPSHOT_COLUMN_LIST = ",bug_severity,priority,short_desc,";
 $SUBGROUPS_COLUMN_NAME = read_config_entry("SUBGROUPS_COLUMN_NAME", "can be empty");
@@ -69,21 +72,24 @@ if ($SUBGROUPS_COLUMN_NAME ne "") {
 	$BUGZILLA_SNAPSHOT_COLUMN_LIST .= "$SUBGROUPS_COLUMN_NAME,";
 }
 
-# variables needed to create links in GUI
+# variables needed to find out changes in bugs
 @BUGS_OPEN = read_config_rule(read_config_entry("BUGS_OPEN"), 1);
 @BUGS_FIXED = read_config_rule(read_config_entry("BUGS_FIXED"), 1);
 @BUGS_RELEASED = read_config_rule(read_config_entry("BUGS_RELEASED"), 1);
 @BUGS_CLOSED = read_config_rule(read_config_entry("BUGS_CLOSED"), 1);
 @BUGS_RELEASEABLE = read_config_rule(read_config_entry("BUGS_RELEASEABLE"), 1);
 @BUGS_NOT_CONFIRMED = read_config_rule(read_config_entry("BUGS_NOT_CONFIRMED"), 1);
-@BUGS_DEPENDS_ON_DEPENDENCIES = read_config_rule(read_config_entry("BUGS_DEPENDS_ON_DEPENDENCIES"), 1);
+
+$BUGS_DEPENDS_ON_DEPENDENCIES_STR = read_config_entry("BUGS_DEPENDS_ON_DEPENDENCIES", "can be empty");
+@BUGS_DEPENDS_ON_DEPENDENCIES = ();
+if ($BUGS_DEPENDS_ON_DEPENDENCIES_STR ne "") {
+	@BUGS_DEPENDS_ON_DEPENDENCIES = read_config_rule($BUGS_DEPENDS_ON_DEPENDENCIES_STR, 1);
+}
 
 $SUBGROUPS_FILE_NAME = "";
 if ($SUBGROUPS_COLUMN_NAME ne "") {
 	$SUBGROUPS_FILE_NAME = "$OUTPUT_PATH/subgroups";
 }
-
-
 
 die "ERROR: Shapshot file 1 does not exists: $SNAPSHOT_FILE_1 - exit." unless ($SNAPSHOT_FILE_1 eq "none" or -e "$SNAPSHOTS_PATH/$SNAPSHOT_FILE_1");
 die "ERROR: Shapshot file 1 is empty: $SNAPSHOT_FILE_1 - exit." if (-z "$SNAPSHOTS_PATH/$SNAPSHOT_FILE_1");
@@ -92,57 +98,76 @@ die "ERROR: Shapshot file 2 is empty: $SNAPSHOT_FILE_2 - exit." if (-z "$SNAPSHO
 
 # Calculating date variables
 @days_of_weeks = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
-if ($SNAPSHOT_FILE_1 eq "none")
+
+if ($RUN_FEW_TIMES_A_DAY eq "true")
 {
-	# NOTE: this "if" will fail in case when statistics generation starts in first day of the year - funny data will be generated (eg. "week 0")
 	($year_n, $month_n, $day_n, $hour_n, $minute_n) = ($SNAPSHOT_FILE_2 =~ /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)\.csv/);
-	$week_of_year = strftime "%V", (0,  $minute_n, $hour_n, $day_n, $month_n-1, $year_n-1900);
 	$day_of_week_no = strftime "%u", (0,  $minute_n, $hour_n, $day_n, $month_n-1, $year_n-1900);
-	$year = $year_n;
-	$day_of_week_no--;
-	if ($day_of_week_no == 0) {
-		# if it's monday then we assume that snapshot contains data from Fri to Sun of previous week..
-		$day_of_week_no = 5;
-		$day_of_week = $days_of_weeks[4] . "-" . $days_of_weeks[6];
-		$week_of_year--;
-		if ($week_of_year < 10) {
-			$week_of_year = "0" . $week_of_year;
-		}
-		# when $week_of_year == 0, we should change $year to $year-1 and $week_of_year to 53?
-	} else {
-		# .. in other case we assume that snapshot contains data from last day only
-		$day_of_week = $days_of_weeks[ $day_of_week_no-1 ];
+	$CHANGES_OUTFILE = strftime "%Y_%V", (0, $minute_n, $hour_n, $day_n, $month_n-1, $year_n-1900);
+	if ($DAILY_STATS == 1) {
+		$CHANGES_OUTFILE .= "_" . $day_of_week_no;
 	}
-	if ($week_of_year > 50 && $month_n == 1) {
-		$year--;
-	}
+	
+	$DAY = strftime "Week %V, ", (0, $minute_n, $hour_n, $day_n, $month_n-1, $year_n-1900);
+	$DAY .= $days_of_weeks[ $day_of_week_no-1 ];
+	$DAY .= strftime ", %H:%M", (0, $minute_n, $hour_n, $day_n, $month_n-1, $year_n-1900);
 }
 else
 {
-	($year, $month, $day, $hour, $minute) = ($SNAPSHOT_FILE_1 =~ /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)\.csv/);
-	$week_of_year = strftime "%V", (0, $minute, $hour, $day, $month-1, $year-1900);
-	$day_of_week_no = strftime "%u", (0, $minute, $hour, $day, $month-1, $year-1900);
-	$day_of_week = $days_of_weeks[ $day_of_week_no-1 ];
-	($year_n, $month_n, $day_n, $hour_n, $minute_n) = ($SNAPSHOT_FILE_2 =~ /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)\.csv/);
-	$day_of_week_no_new = strftime "%u", (0, $minute_n, $hour_n, $day_n, $month_n-1, $year_n-1900);
-	if ($day_of_week_no_new == 1) {
-		$day_of_week_no_new += 7;
+	if ($SNAPSHOT_FILE_1 eq "none")
+	{
+		# CHECK IT: this "if" can fail in case when statistics generation starts in first day of the year - funny data will be generated (eg. "week 0")
+		($year_n, $month_n, $day_n, $hour_n, $minute_n) = ($SNAPSHOT_FILE_2 =~ /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)\.csv/);
+		$week_of_year = strftime "%V", (0,  $minute_n, $hour_n, $day_n, $month_n-1, $year_n-1900);
+		$day_of_week_no = strftime "%u", (0,  $minute_n, $hour_n, $day_n, $month_n-1, $year_n-1900);
+		$year = $year_n;
+		$day_of_week_no--;
+		if ($day_of_week_no == 0) {
+			# if it's monday then we assume that snapshot contains data from Fri to Sun of previous week..
+			$day_of_week_no = 5;
+			$day_of_week = $days_of_weeks[4] . "-" . $days_of_weeks[6];
+			$week_of_year--;
+			if ($week_of_year < 10) {
+				$week_of_year = "0" . $week_of_year;
+			}
+			# when $week_of_year == 0, we should change $year to $year-1 and $week_of_year to 53?
+		} else {
+			# .. in other case we assume that snapshot contains data from last day only
+			$day_of_week = $days_of_weeks[ $day_of_week_no-1 ];
+		}
+		if ($week_of_year > 50 && $month_n == 1) {
+			$year--;
+		}
 	}
-	$day_of_week_no_new--;
-	if ($day_of_week_no_new != $day_of_week_no) {
-		$day_of_week .= "-" . $days_of_weeks[ $day_of_week_no_new-1 ];
+	else
+	{
+		($year, $month, $day, $hour, $minute) = ($SNAPSHOT_FILE_1 =~ /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)\.csv/);
+		$week_of_year = strftime "%V", (0, $minute, $hour, $day, $month-1, $year-1900);
+		$day_of_week_no = strftime "%u", (0, $minute, $hour, $day, $month-1, $year-1900);
+		$day_of_week = $days_of_weeks[ $day_of_week_no-1 ];
+		($year_n, $month_n, $day_n, $hour_n, $minute_n) = ($SNAPSHOT_FILE_2 =~ /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)\.csv/);
+		$day_of_week_no_new = strftime "%u", (0, $minute_n, $hour_n, $day_n, $month_n-1, $year_n-1900);
+		if ($day_of_week_no_new == 1) {
+			$day_of_week_no_new += 7;
+		}
+		$day_of_week_no_new--;
+		if ($day_of_week_no_new != $day_of_week_no) {
+			$day_of_week .= "-" . $days_of_weeks[ $day_of_week_no_new-1 ];
+		}
+		if ($week_of_year > 50 && $month == 1) {
+			$year--;
+		}
 	}
-	if ($week_of_year > 50 && $month == 1) {
-		$year--;
+
+	$CHANGES_OUTFILE = $year . "_" . $week_of_year;
+	$DAY = "Week $week_of_year";
+	if ($DAILY_STATS == 1) {
+		$CHANGES_OUTFILE .= "_" . $day_of_week_no;
+		$DAY .= ", $day_of_week";
 	}
 }
+
 $SNAPSHOT_TAKEN_TIME = strftime "%a, %e %b %Y, %R", (0, $minute_n, $hour_n, $day_n, $month_n-1, $year_n-1900);
-$CHANGES_OUTFILE = $year . "_" . $week_of_year;
-$DAY = "Week $week_of_year";
-if ($DAILY_STATS == 1) {
-	$CHANGES_OUTFILE .= "_" . $day_of_week_no;
-	$DAY .= ", $day_of_week";
-}
 
 $STATUS_ACTIVE = "active";
 $STATUS_OPEN = "open";
@@ -359,6 +384,9 @@ sub match_to_the_rule
 	} elsif ($rule_type eq $STATUS_NOT_CONFIRMED) {
 		@rule = @BUGS_NOT_CONFIRMED;
 	} elsif ($rule_type eq $STATUS_DEPENDS_ON_DEPENDENCIES) {
+		if ($BUGS_DEPENDS_ON_DEPENDENCIES_STR eq "") {
+			return 0;
+		}
 		@rule = @BUGS_DEPENDS_ON_DEPENDENCIES;
 	}
 
@@ -718,23 +746,28 @@ sub save_results
 		}
 
 		print STATSFILE "$DAY;;;$SNAPSHOT_TAKEN_TIME;;;$CHANGES_OUTFILE" . ($group_name eq "all_bugs" ? "" : "_$group_name")
-			. ";;;" . $results{$group_name}{'active'}{'count'}
-			. ";;;" . ( $results{$group_name}{'active'}{'count'} - $results{$group_name}{'open'}{'count'} )
-			. ";;;" . $results{$group_name}{'verifiable'}{'count'} . ";;;" . $results{$group_name}{'not_released'}{'count'}
-			. ";;;" . $results{$group_name}{'open'}{'count'} . ";;;" . $results{$group_name}{'unconfirmed'}{'count'}
-			. ";;;" . $results{$group_name}{'new'}{'count'} . ";;;" . $results{$group_name}{'reopened'}{'count'}
-			. ";;;" . $results{$group_name}{'resolved'}{'count'} . ";;;" . $results{$group_name}{'moved_out'}{'count'}
-			. ";;;" . $results{$group_name}{'released'}{'count'} . ";;;" . $results{$group_name}{'closed'}{'count'} . "\n";
+			. ";;;" . $results{$group_name}{$STATUS_ACTIVE}{'count'}
+			. ";;;" . ( $results{$group_name}{$STATUS_ACTIVE}{'count'} - $results{$group_name}{$STATUS_OPEN}{'count'} )
+			. ";;;" . $results{$group_name}{$STATUS_VERIFIABLE}{'count'} . ";;;" . $results{$group_name}{$STATUS_NOT_RELEASED}{'count'}
+			. ";;;" . $results{$group_name}{$STATUS_OPEN}{'count'} . ";;;" . $results{$group_name}{$STATUS_NOT_CONFIRMED}{'count'}
+			. ";;;" . $results{$group_name}{$STATUS_NEW}{'count'} . ";;;" . $results{$group_name}{$STATUS_REOPENED}{'count'}
+			. ";;;" . $results{$group_name}{$STATUS_RESOLVED}{'count'} . ";;;" . $results{$group_name}{$STATUS_MOVED_OUT}{'count'}
+			. ";;;" . $results{$group_name}{$STATUS_RELEASED}{'count'} . ";;;" . $results{$group_name}{$STATUS_CLOSED}{'count'} . "\n";
 		close STATSFILE;
 
-		open(OUTFILE, ">", "$changes_file");
-		print OUTFILE $results{$group_name}{'active'}{'list'}
-			. $results{$group_name}{'verifiable'}{'list'} . $results{$group_name}{'not_released'}{'list'}
-			. $results{$group_name}{'open'}{'list'} . $results{$group_name}{'unconfirmed'}{'list'}
-			. $results{$group_name}{'new'}{'list'} . $results{$group_name}{'reopened'}{'list'}
-			. $results{$group_name}{'resolved'}{'list'} . $results{$group_name}{'moved_out'}{'list'}
-			. $results{$group_name}{'released'}{'list'} . $results{$group_name}{'closed'}{'list'};
-		close OUTFILE;
+		open(DETFILE, ">", "$changes_file");
+		print DETFILE $results{$group_name}{$STATUS_NEW}{'list'};
+		print DETFILE $results{$group_name}{$STATUS_REOPENED}{'list'};
+		print DETFILE $results{$group_name}{$STATUS_RESOLVED}{'list'};
+		print DETFILE $results{$group_name}{$STATUS_MOVED_OUT}{'list'};
+		print DETFILE $results{$group_name}{$STATUS_RELEASED}{'list'};
+		print DETFILE $results{$group_name}{$STATUS_CLOSED}{'list'};
+		print DETFILE $results{$group_name}{$STATUS_ACTIVE}{'list'};
+		print DETFILE $results{$group_name}{$STATUS_VERIFIABLE}{'list'};
+		print DETFILE $results{$group_name}{$STATUS_NOT_RELEASED}{'list'};
+		print DETFILE $results{$group_name}{$STATUS_OPEN}{'list'};
+		print DETFILE $results{$group_name}{$STATUS_NOT_CONFIRMED}{'list'};
+		close DETFILE;
 	}
 
 	if ($SUBGROUPS_COLUMN_NAME ne "") {
@@ -796,7 +829,7 @@ sub read_config_entry {
 	} elsif ($ret_common ne "") {
 		return $ret_common;
 	} elsif (@_[1] ne "can be empty") {
-		fatal("config entry " . @_[0] . " not found or it's value is empty. Please fix config file: $CONFIG_FILE");
+		return "ERROR: config entry " . @_[0] . " not found or it's value is empty. Please fix config file: $CONFIG_FILE";
 	}
 	return "";
 }

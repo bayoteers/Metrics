@@ -64,19 +64,19 @@ $PRODUCTS_CONFIG_FILE = read_config_entry("PRODUCTS_CONFIG_FILE");
 if ($UPDATE_CONFIG_FILE == 0) {
 	die "File with list of products does not exists: $PRODUCTS_CONFIG_FILE - exit." unless (-e $PRODUCTS_CONFIG_FILE);
 }
-$TMP_DIR = read_config_entry("TMP_DIR");
 $ADMIN_MAIL = read_config_entry("ADMIN_MAIL");
 $STATISTICS_PATH = read_config_entry("STATISTICS_BASE_PATH") . "/" . read_config_entry("STATISTICS");
 
+$TMP_DIR = "/tmp/classification_tmp_" . rand_str(20);
+if (-e $TMP_DIR) {
+	$TMP_DIR .= rand_str(20);
+}
+if (!mkdir $TMP_DIR) {
+	fatal("Cannot create temporary folder '$TMP_DIR': $!");
+}
 
 
 info("Checking whether the products' list of classification '$BUGZILLA_CLASSIFICATION' is up to date.");
-
-if (! -e $TMP_DIR) {
-	if (!mkdir $TMP_DIR) {
-		fatal("Cannot create temporary folder '$TMP_DIR': $!");
-	}
-}
 
 $errors = "";
 $new_elements = "";
@@ -363,6 +363,22 @@ sub fatal
 
 	close LOG;
 	die "@_";
+}
+
+# ==================================================
+sub rand_str
+{
+	my $length_of_randomstring=shift; # the length of the random string to generate
+
+	my @chars=('a'..'z','A'..'Z','0'..'9','_');
+	my $random_string;
+	foreach (1..$length_of_randomstring) 
+	{
+		# rand @chars will generate a random 
+		# number between 0 and scalar @chars
+		$random_string.=$chars[rand @chars];
+	}
+	return $random_string;
 }
 
 # ==================================================

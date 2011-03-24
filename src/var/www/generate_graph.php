@@ -61,7 +61,7 @@ $graph->SetMarginColor($bgcolor);
 
 // Adjust the margin slightly so that we use the
 // entire area (since we don't use a frame)
-$graph->SetMargin(40,5,30,50);
+$graph->SetMargin(40,5,30, ($stats['long_desc_graph']?65:50));
 
 // Box around plotarea
 $graph->SetBox();

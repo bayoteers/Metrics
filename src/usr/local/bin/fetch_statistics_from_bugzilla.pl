@@ -29,11 +29,6 @@ This script fetches new snapshot of bugs from Bugzilla and prepares data for pri
 !END!
 
 
-# TEMPORARY TO BE REMOVED IN FEW DAYS
-$TMP_create_prev_d_raw = 0;
-$TMP_create_prev_w_raw = 0;
-
-
 if ($#ARGV != 0) {
 	print "ERROR: too few or too many argument(s)\n$help";
 	exit -1;
@@ -52,6 +47,14 @@ $LOG_FILE = read_config_entry("LOG_FILE");
 open (LOG, ">>", $LOG_FILE);
 info("======================================================================================");
 info("START");
+
+$TMP_DIR = "/tmp/bugs_statistics_tmp_" . rand_str(20);
+if (-e $TMP_DIR) {
+	$TMP_DIR .= rand_str(20);
+}
+if (!mkdir $TMP_DIR) {
+	fatal("Cannot create temporary folder '$TMP_DIR': $!");
+}
 
 $SUBSET_OF = read_config_entry("SUBSET_OF", "can be empty");
 $PARENT_STATS_FOLDER = read_config_entry("STATISTICS_BASE_PATH") . "/" . $SUBSET_OF;
@@ -85,7 +88,6 @@ $BUGZILLA_URL_COMMON_PARAMS = (create_bugzilla_params_from_rule( read_config_rul
 $STATS_URL_BASE = read_config_entry("STATS_URL_BASE");
 $STATISTICS = read_config_entry("STATISTICS");
 $STATS_FOLDER = read_config_entry("STATISTICS_BASE_PATH") . "/" . read_config_entry("STATISTICS");
-$TMP_DIR = read_config_entry("TMP_DIR");
 $PRODUCTS_CONFIG_FILE = read_config_entry("PRODUCTS_CONFIG_FILE");
 die "File with list of products does not exists: $PRODUCTS_CONFIG_FILE - exit." unless (-e $PRODUCTS_CONFIG_FILE);
 $MAIL_TO = read_config_entry("MAIL_TO", "can be empty");
@@ -93,12 +95,8 @@ $ADMIN_MAIL = read_config_entry("ADMIN_MAIL");
 $SENT_EMAIL_NOTIFICATION = read_config_entry("SENT_EMAIL_NOTIFICATION");
 $INCOMPLETE_CLASSIFICATION = read_config_entry("INCOMPLETE_CLASSIFICATION", "can be empty");
 $BUGS_DEPENDS_ON_DEPENDENCIES_STR = read_config_entry("BUGS_DEPENDS_ON_DEPENDENCIES", "can be empty");
+$RUN_FEW_TIMES_A_DAY = read_config_entry("RUN_FEW_TIMES_A_DAY", "can be empty", "false");
 
-if (! -e $TMP_DIR) {
-	if (!mkdir $TMP_DIR) {
-		fatal("Cannot create temporary folder '$TMP_DIR': $!");
-	}
-}
 if (! -e $STATS_FOLDER) {
 	if (!mkdir $STATS_FOLDER) {
 		fatal("Cannot create statistics' folder '$STATS_FOLDER': $!");
@@ -115,7 +113,9 @@ $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME = "$STATS_FOLDER/bugs_with_dependencies
 if ($SUBSET_OF ne "") {
 	$BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME = "$PARENT_STATS_FOLDER/bugs_with_dependencies";
 }
-
+if ($BUGS_DEPENDS_ON_DEPENDENCIES_STR eq "") {
+	$BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME = "";
+}
 
 
 chomp($time = `date +"%Y-%m-%d_%H-%M"`);
@@ -283,6 +283,12 @@ for $product ( sort (keys %PRODUCTS) )
 		$snapshot_output_file = "";
 		$prev_snapshot_daily = "none";
 		$prev_snapshot_weekly = "none";
+
+		# this is needed for online view
+		my @elements = split("_", $snapshot_output_file);
+		$snapshot_date = $elements[0];
+		$last_available_snapshot = "none";
+
 		opendir(S_DIR, $snapshot_output_dir);
 		foreach my $s ( sort {$b cmp $a} (readdir S_DIR ) )
 		{
@@ -290,12 +296,23 @@ for $product ( sort (keys %PRODUCTS) )
 				next;
 			}
 			if ($snapshot_output_file eq "") {
-				# read today snapshot file -> this part of code should be executed only when ($SUBSET_OF ne "")
+				# read today snapshot file
 				$snapshot_output_file = $s;
+				my @elements = split("_", $snapshot_output_file);
+				$snapshot_date = $elements[0];
 			} else {
 				# previous daily snapshot (previous day)
 				if ($prev_snapshot_daily eq "none") {
-					$prev_snapshot_daily = $s;
+					if ($RUN_FEW_TIMES_A_DAY eq "true") {
+						@elements = split("_", $s);
+						if ($snapshot_date ne $elements[0]) {
+							$prev_snapshot_daily = $s;
+						} else {
+							$last_available_snapshot = $s;
+						}
+					} else {
+						$prev_snapshot_daily = $s;
+					}
 				}
 				# previous weekly snapshot (last Monday)
 				($year, $month, $day, $hour, $minute) = ($s =~ /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)\.csv/);
@@ -307,6 +324,10 @@ for $product ( sort (keys %PRODUCTS) )
 			}
 		}
 		closedir S_DIR;
+
+		if ($RUN_FEW_TIMES_A_DAY eq "true" && $prev_snapshot_daily eq "none") {
+			$prev_snapshot_daily = $last_available_snapshot;
+		}
 
 	}
 	else
@@ -325,8 +346,12 @@ for $product ( sort (keys %PRODUCTS) )
 		# this is a workaround
 		$bugzilla_request_closed = $bugzilla_request;
 		if ( create_bugzilla_param_column_list(@BUGS_CLOSED) eq "&columnlist=,bug_status,") {
-			# ($day_of_week==1) - on Monday fetch data from last 8 days, on other days from last 5 days.
-			$bugzilla_request_closed .= "&chfield=bug_status&chfieldfrom=" . ($day_of_week eq "1" ? "8" : "5") . "d&chfieldto=Now" . (create_bugzilla_params_from_rule(@BUGS_CLOSED))[0];
+			if ($RUN_FEW_TIMES_A_DAY eq "true") {
+				$bugzilla_request_closed .= "&chfield=bug_status&chfieldfrom=1d&chfieldto=Now" . (create_bugzilla_params_from_rule(@BUGS_CLOSED))[0];
+			} else {
+				# ($day_of_week==1) - on Monday fetch data from last 8 days, on other days from last 5 days.
+				$bugzilla_request_closed .= "&chfield=bug_status&chfieldfrom=" . ($day_of_week eq "1" ? "8" : "5") . "d&chfieldto=Now" . (create_bugzilla_params_from_rule(@BUGS_CLOSED))[0];
+			}
 		} else {
 			$bugzilla_request_closed .= (create_bugzilla_params_from_rule(@BUGS_CLOSED))[0];
 		}
@@ -356,23 +381,51 @@ for $product ( sort (keys %PRODUCTS) )
 			# find the previous snapshot files (previous day for daily stats and last Monday for weekly stats
 			$prev_snapshot_daily = "none";
 			$prev_snapshot_weekly = "none";
+			
+			# this is needed for online view
+			my @elements = split("_", $snapshot_output_file);
+			$snapshot_date = $elements[0];
+			$last_available_snapshot_d = "none";
+			$last_available_snapshot_w = "none";
 			opendir(S_DIR, $snapshot_output_dir);
 			foreach my $s ( sort {$b cmp $a} (readdir S_DIR ) )
 			{
 				if (-d "$snapshot_output_dir/$s" || $s eq $snapshot_output_file || $s eq ".." || $s eq ".") {
 					next;
 				}
-				if ($snapshot_output_file eq "") {
-					# read today snapshot file -> this part of code should be executed only when ($SUBSET_OF ne "")
-					$snapshot_output_file = $s;
-				} else {
-					# previous daily snapshot (previous day)
-					if ($prev_snapshot_daily eq "none") {
+				
+				# previous daily snapshot (previous day)
+				if ($prev_snapshot_daily eq "none") {
+					@elements = split("_", $s);
+					if ($RUN_FEW_TIMES_A_DAY eq "true") {
+						if ($snapshot_date ne $elements[0]) {
+							$prev_snapshot_daily = $s;
+						} else {
+							$last_available_snapshot_d = $s;
+						}
+					} else {
+						# check if statistics has not been fetched already today, i.e. check if there is another file with today's data in the raw_data folder.
+						# if yes then raise fatal error (and exit).
+						if ($snapshot_date eq $elements[0]) {
+							fatal("Statistics has been fetched already today - risk of corupting data! Statistics cannot be run more than once per day, when RUN_FEW_TIMES_A_DAY is not enabled. Please remove all files $STATS_FOLDER/*/raw_data/$snapshot_date*' and fetch statistics once again.");
+						}
 						$prev_snapshot_daily = $s;
 					}
-					# previous weekly snapshot (last Monday)
-					($year, $month, $day, $hour, $minute) = ($s =~ /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)\.csv/);
-					$dow = strftime "%u", (0, $minute, $hour, $day, $month-1, $year-1900);
+				}
+				# previous weekly snapshot (last Monday)
+				($year, $month, $day, $hour, $minute) = ($s =~ /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)\.csv/);
+				$dow = strftime "%u", (0, $minute, $hour, $day, $month-1, $year-1900);
+				if ($RUN_FEW_TIMES_A_DAY eq "true") {
+					if ($prev_snapshot_weekly eq "none") {
+						@elements = split("_", $s);
+						if ( $dow == 7 && $snapshot_date ne $elements[0] ) {
+							$prev_snapshot_weekly = $s;
+							last;
+						} else {
+							$last_available_snapshot_w = $s;
+						}
+					}
+				} else {
 					if ($dow == 1) {
 						$prev_snapshot_weekly = $s;
 						last;
@@ -380,6 +433,15 @@ for $product ( sort (keys %PRODUCTS) )
 				}
 			}
 			closedir S_DIR;
+			
+			if ($RUN_FEW_TIMES_A_DAY eq "true") {
+				if ($prev_snapshot_daily eq "none") {
+					$prev_snapshot_daily = $last_available_snapshot_d;
+				}
+				if ($prev_snapshot_weekly eq "none") {
+					$prev_snapshot_weekly = $last_available_snapshot_w;
+				}
+			}
 
 			# compare just fetched snapshot with previous one - prepare data for printing them on the web page (daily view)
 			info("compare just fetched snapshot with previous one - prepare data for printing them on the web page");
@@ -418,22 +480,6 @@ for $product ( sort (keys %PRODUCTS) )
 	# prepare raw data file in ALL_PRODUCTS_DIR
 	execute_command("cat $snapshot_output_dir/$snapshot_output_file >> $STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$snapshot_output_file");
 	execute_command("echo '' >> $STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$snapshot_output_file");
-
-	if ($TMP_create_prev_d_raw == 1 || ! -e "$STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$prev_snapshot_daily") {
-		if ($prev_snapshot_daily ne "none") {
-			execute_command("cat $snapshot_output_dir/$prev_snapshot_daily >> $STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$prev_snapshot_daily");
-			execute_command("echo '' >> $STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$prev_snapshot_daily");
-			$TMP_create_prev_d_raw = 1;
-		}
-	}
-
-	if ($TMP_create_prev_w_raw == 1 || ! -e "$STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$prev_snapshot_weekly") {
-		if ($prev_snapshot_weekly ne "none") {
-			execute_command("cat $snapshot_output_dir/$prev_snapshot_weekly >> $STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$prev_snapshot_weekly");
-			execute_command("echo '' >> $STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR/$prev_snapshot_weekly");
-			$TMP_create_prev_w_raw = 1;
-		}
-	}
 }
 
 
@@ -443,6 +489,13 @@ $snapshot_output_file = "";
 $prev_snapshot_daily = "none";
 $prev_snapshot_weekly = "none";
 $snapshot_output_dir = "$STATS_FOLDER/$ALL_PRODUCTS_DIR/$RAW_DATA_DIR";
+
+# this is needed for online view
+my @elements = split("_", $snapshot_output_file);
+$snapshot_date = $elements[0];
+$last_available_snapshot_d = "none";
+$last_available_snapshot_w = "none";
+
 opendir(S_DIR, $snapshot_output_dir);
 foreach my $s ( sort {$b cmp $a} (readdir S_DIR ) )
 {
@@ -452,21 +505,53 @@ foreach my $s ( sort {$b cmp $a} (readdir S_DIR ) )
 	if ($snapshot_output_file eq "") {
 		# read today snapshot file -> this part of code should be executed only when ($SUBSET_OF ne "")
 		$snapshot_output_file = $s;
+		my @elements = split("_", $snapshot_output_file);
+		$snapshot_date = $elements[0];
 	} else {
 		# previous daily snapshot (previous day)
 		if ($prev_snapshot_daily eq "none") {
-			$prev_snapshot_daily = $s;
+			if ($RUN_FEW_TIMES_A_DAY eq "true") {
+				@elements = split("_", $s);
+				if ($snapshot_date ne $elements[0]) {
+					$prev_snapshot_daily = $s;
+				} else {
+					$last_available_snapshot = $s;
+				}
+			} else {
+				$prev_snapshot_daily = $s;
+			}
 		}
 		# previous weekly snapshot (last Monday)
 		($year, $month, $day, $hour, $minute) = ($s =~ /(\d+)-(\d+)-(\d+)_(\d+)-(\d+)\.csv/);
 		$dow = strftime "%u", (0, $minute, $hour, $day, $month-1, $year-1900);
-		if ($dow == 1) {
-			$prev_snapshot_weekly = $s;
-			last;
+		if ($RUN_FEW_TIMES_A_DAY eq "true") {
+			if ($prev_snapshot_weekly eq "none") {
+				@elements = split("_", $s);
+				if ( $dow == 7 && $snapshot_date ne $elements[0] ) {
+					$prev_snapshot_weekly = $s;
+					last;
+				} else {
+					$last_available_snapshot_w = $s;
+				}
+			}
+		} else {
+			if ($dow == 1) {
+				$prev_snapshot_weekly = $s;
+				last;
+			}
 		}
 	}
 }
 closedir S_DIR;
+
+if ($RUN_FEW_TIMES_A_DAY eq "true") {
+	if ($prev_snapshot_daily eq "none") {
+		$prev_snapshot_daily = $last_available_snapshot_d;
+	}
+	if ($prev_snapshot_weekly eq "none") {
+		$prev_snapshot_weekly = $last_available_snapshot_w;
+	}
+}
 
 # compare new snapshot with previous one for ALL PRODUCTS - prepare data for printing them on the web page (daily view)
 info("compare new snapshot with previous one for ALL PRODUCTS - prepare data for printing them on the web page");
@@ -743,7 +828,7 @@ sub read_config_entry {
 	} elsif (@_[1] ne "can be empty") {
 		fatal("config entry " . @_[0] . " not found or it's value is empty. Please fix config file: $CONFIG_FILE");
 	}
-	return "";
+	return @_[2];
 }
 
 sub read_products_list {
@@ -836,7 +921,7 @@ sub create_bugzilla_param_column_list() {
 sub execute_command {
 	my $command = @_[0];
 	info("COMMAND: $command");
-	my $ret = `$command 2<&1`;
+	my $ret = `$command 2>&1`;
 	info("RESPONSE: $ret");
 	return $ret;
 }
@@ -860,6 +945,22 @@ sub fatal
 
 	close LOG;
 	die "@_";
+}
+
+# ==================================================
+sub rand_str
+{
+	my $length_of_randomstring=shift; # the length of the random string to generate
+
+	my @chars=('a'..'z','A'..'Z','0'..'9','_');
+	my $random_string;
+	foreach (1..$length_of_randomstring) 
+	{
+		# rand @chars will generate a random 
+		# number between 0 and scalar @chars
+		$random_string.=$chars[rand @chars];
+	}
+	return $random_string;
 }
 
 # ==================================================

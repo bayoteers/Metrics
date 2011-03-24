@@ -103,10 +103,12 @@ function read_statistics($statistic, $product, $component, $no_of_weeks_to_show,
     }
 
     $stats = null;
+    $stats['long_desc_graph'] = false;
 
     $lines = file($stats_file);
     $lines_count = count($lines);
     $first_row = 0;
+    
     if ($day_view) {
         if ($no_of_weeks_to_show * 5 < $lines_count)
         {
@@ -142,26 +144,46 @@ function read_statistics($statistic, $product, $component, $no_of_weeks_to_show,
             continue;
         }
         $entry = explode(';;;', $line);
-        $stats['desc_table'][$i] = $entry[0];
+        
 		$week = substr(trim($entry[0]), 5, 2);
+        $week_day = explode(',', trim($entry[0]));
+        
         if ($day_view) {
-			// Week 11, Mon
-            $week_day = explode(',', trim($entry[0]));
-            if ($week_day[1] === " Mon") {
-                $week_day[0] = str_replace("Week ", "W", $week_day[0]);
-                $stats['desc_graph'][$i] = $week_day[0] . $week_day[1];
-				if ($week == 1) {
-					$stats['new_year'][$i] = "Year " . substr($entry[2], 0, 4);
-				}
+            if ( $line_no == $lines_count-1 && count($week_day) == 3) {
+                // online view: "Week 11, Mon, 10:32"
+                $stats['desc_table'][$i] = $entry[0];
+                if ($week_day[1] === " Mon") {
+                    $stats['desc_graph'][$i] = str_replace("Week ", "W", $week_day[0]) . $week_day[1] . $week_day[2];
+                    $stats['long_desc_graph'] = true;
+                } else {
+                    $stats['desc_graph'][$i] = $week_day[1] . $week_day[2];
+                }
             } else {
-                $stats['desc_graph'][$i] = $week_day[1];
+                // day view: "Week 11, Mon"
+                $stats['desc_table'][$i] = $week_day[0] . "," . $week_day[1];
+                if ($week_day[1] === " Mon") {
+                    $stats['desc_graph'][$i] = str_replace("Week ", "W", $week_day[0]) . $week_day[1];
+    				if ($week == 1) {
+    					$stats['new_year'][$i] = "Year " . substr($entry[2], 0, 4);
+    				}
+                } else {
+                    $stats['desc_graph'][$i] = $week_day[1];
+                }
             }
         } else {
-        	// Week 31
-            $stats['desc_graph'][$i] = str_replace("Week ", "W", $entry[0]);
-			if ($week == 1) {
-				$stats['new_year'][$i] = "Year " . substr($entry[2], 0, 4) . "</br>";
-			}
+            if ( $line_no == $lines_count-1 && count($week_day) == 3) {
+                // online view: "Week 11, Mon, 10:32"
+                $stats['desc_table'][$i] = $entry[0];
+                $stats['desc_graph'][$i] = str_replace("Week ", "W", $week_day[0]) . $week_day[1] . $week_day[2];
+                $stats['long_desc_graph'] = true;
+            } else {
+            	// week view: "Week 31"
+            	$stats['desc_table'][$i] = $week_day[0];
+                $stats['desc_graph'][$i] = str_replace("Week ", "W", $week_day[0]);
+    			if ($week == 1) {
+    				$stats['new_year'][$i] = "Year " . substr($entry[2], 0, 4) . "</br>";
+    			}
+            }
         }
         // 0              1                         2            3     4    5   6    7     8   9   10  11  12  13
         // Week 36, Mon;;;Tue,  7 Sep 2010, 14:07;;;2010_36_1;;; 109;;;25;;;7;;;84;;;27;;; 1;;;0;;;5;;;0;;;0;;;1

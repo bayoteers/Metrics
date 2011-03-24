@@ -29,32 +29,21 @@ if ($SUBSET_OF ne "") {
 	}
 }
 
-#$BUGZILLA_URL_BASE = read_config_entry("BUGZILLA_URL_BASE");
-# variables needed to fetch the snapshot from BZ
-#$BUGZILLA_URL_SNAPSHOT = read_config_entry("BUGZILLA_URL_SNAPSHOT");
-#$BUGZILLA_URL_COMMON_PARAMS = read_config_entry("BUGZILLA_URL_COMMON_PARAMS");
-# variables needed to create links in GUI
-#$VARIABLES_FILE_NAME = read_config_entry("VARIABLES_FILE_NAME");
-#$BUGZILLA_URL_REPORT_ACTIVE = read_config_entry("BUGZILLA_URL_REPORT_ACTIVE");
-#$BUGZILLA_URL_REPORT_NOT_RELEASED = read_config_entry("BUGZILLA_URL_REPORT_NOT_RELEASED");
-#$BUGZILLA_URL_REPORT_OPEN = read_config_entry("BUGZILLA_URL_REPORT_OPEN");
-#$BUGZILLA_URL_REPORT_NOT_CONFIRMED = read_config_entry("BUGZILLA_URL_REPORT_NOT_CONFIRMED");
-# other
 $STATS_URL_BASE = read_config_entry("STATS_URL_BASE");
 $STATISTICS = read_config_entry("STATISTICS");
 $STATS_FOLDER = read_config_entry("STATISTICS_BASE_PATH") . "/" . read_config_entry("STATISTICS");
-#$ALL_COMPONENTS_DIR = read_config_entry("ALL_COMPONENTS_DIR");
-#$RAW_DATA_DIR = read_config_entry("RAW_DATA_DIR");
-#$USER = read_config_entry("USER");
-#$PASS = read_config_entry("PASS");
-$TMP_DIR = read_config_entry("TMP_DIR");
+
 $COMPONENTS_CONFIG_FILE = read_config_entry("PRODUCTS_CONFIG_FILE");
 die "File with list of components does not exists: $COMPONENTS_CONFIG_FILE - exit." unless (-e $COMPONENTS_CONFIG_FILE);
-#$MAIL_TO = read_config_entry("MAIL_TO", "can be empty");
 $ADMIN_MAIL = read_config_entry("ADMIN_MAIL");
-#$EMAIL_LAST_DAY_STATISTICS = read_config_entry("EMAIL_LAST_DAY_STATISTICS");
-#$EMAIL_COMPONENT_STATISTICS = read_config_entry("EMAIL_COMPONENT_STATISTICS");
-#$DAILY_STATS_HISTORY_FILE_NAME = read_config_entry("DAILY_STATS_HISTORY_FILE_NAME");
+
+$TMP_DIR = "/tmp/classification_tmp_" . rand_str(20);
+if (-e $TMP_DIR) {
+	$TMP_DIR .= rand_str(20);
+}
+if (!mkdir $TMP_DIR) {
+	fatal("Cannot create temporary folder '$TMP_DIR': $!");
+}
 
 if (! -e $STATS_FOLDER) {
 	if (!mkdir $STATS_FOLDER) {
@@ -168,6 +157,23 @@ sub fatal
 
 	close LOG;
 	die "@_";
+}
+
+# ==================================================
+
+sub rand_str
+{
+	my $length_of_randomstring=shift; # the length of the random string to generate
+
+	my @chars=('a'..'z','A'..'Z','0'..'9','_');
+	my $random_string;
+	foreach (1..$length_of_randomstring) 
+	{
+		# rand @chars will generate a random 
+		# number between 0 and scalar @chars
+		$random_string.=$chars[rand @chars];
+	}
+	return $random_string;
 }
 
 # ==================================================
