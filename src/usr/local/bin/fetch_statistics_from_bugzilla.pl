@@ -28,7 +28,6 @@ This script fetches new snapshot of bugs from Bugzilla and prepares data for pri
 
 !END!
 
-
 if ($#ARGV != 0) {
 	print "ERROR: too few or too many argument(s)\n$help";
 	exit -1;
@@ -87,6 +86,7 @@ $BUGZILLA_URL_COMMON_PARAMS = (create_bugzilla_params_from_rule( read_config_rul
 # other
 $STATS_URL_BASE = read_config_entry("STATS_URL_BASE");
 $STATISTICS = read_config_entry("STATISTICS");
+check_folder_name($STATISTICS);
 $STATS_FOLDER = read_config_entry("STATISTICS_BASE_PATH") . "/" . read_config_entry("STATISTICS");
 $PRODUCTS_CONFIG_FILE = read_config_entry("PRODUCTS_CONFIG_FILE");
 die "File with list of products does not exists: $PRODUCTS_CONFIG_FILE - exit." unless (-e $PRODUCTS_CONFIG_FILE);
@@ -652,6 +652,7 @@ if ($errors ne "") {
 	fatal ("Errors occurred:\n$errors");
 }
 
+execute_command("rm -rf $TMP_DIR");
 info("END");
 close LOG;
 
@@ -839,11 +840,13 @@ sub read_products_list {
 			next;
 		}
 		($product, $params) = split(";", $a);
+		check_folder_name($product);
+		if ($params eq "") {
+			fatal("Incorrect products config file - second parameter is empty in: '$a'");
+		}
 		#$PRODUCTS{$product} = $params;
 		$PRODUCTS{$product} = (create_bugzilla_params_from_rule( read_config_rule($params) ))[0];
-		if ($SUBSET_OF ne "") {
-			$PRODUCTS_LIST .= $PRODUCTS{$product};
-		}
+		$PRODUCTS_LIST .= $PRODUCTS{$product};
 	}
 	close FILE1;
 }
@@ -919,7 +922,7 @@ sub create_bugzilla_param_column_list() {
 
 # ==================================================
 sub execute_command {
-	my $command = @_[0];
+	my $command = $_[0];
 	info("COMMAND: $command");
 	my $ret = `$command 2>&1`;
 	info("RESPONSE: $ret");
@@ -927,7 +930,7 @@ sub execute_command {
 }
 
 sub info {
-	if (@_[0] ne "") {
+	if ($_[0] ne "") {
 		chomp($time = `date +%Y-%m-%d-%H-%M-%S`);
 		print LOG "$time: @_\n";
 	}
@@ -945,6 +948,14 @@ sub fatal
 
 	close LOG;
 	die "@_";
+}
+
+# ==================================================
+# check if the folder name doesn't contain illegal characters
+sub check_folder_name() {
+	if ( $_[0] =~ m/[^\w\d\._\-]+/ ) {
+		fatal("Incorrect name: '" . $_[0] . "' - allowed characters are: [a-zA-Z1-9\._-]. Space is not allowed.");
+	}
 }
 
 # ==================================================
