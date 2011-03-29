@@ -31,10 +31,10 @@ foreach ($statistics_groups as $group_name=>$group)
             {
                 $g1_count++;
                 if ($subgroup[0] === '[all]') {
-                    $g1_content .= "<td class='td2'><a href='?s=" . $group_name . "_-_" . $subgroup_name . "'>" . str_replace(array("_", "and"), array(" ", "&"), $subgroup_name) . "</a></td><td class='td0'></td></tr><tr>\n";
+                    $g1_content .= "<td class='td2'><a href='?s=" . $group_name . "_-_" . $subgroup_name . "'>" . str_replace(array("_and_", "_"), array(" & ", " "), $subgroup_name) . "</a></td><td class='td0'></td></tr><tr>\n";
                 } else {
-                    $g1_content .= "<td class='td0'><span>" . str_replace(array("_", "and"), array(" ", "&"), $subgroup_name) . "</span></td>\n";
-                    $g1_content .= "<td class='td2'><a href='?s=" . $group_name . "_-_" . $subgroup_name . "_-_" . $subgroup[0] . "'>" . str_replace(array("_", "and"), array(" ", "&"), $subgroup[0]) . "</a></td></tr><tr>\n";
+                    $g1_content .= "<td class='td0'><span>" . str_replace(array("_and_", "_"), array(" & ", " "), $subgroup_name) . "</span></td>\n";
+                    $g1_content .= "<td class='td2'><a href='?s=" . $group_name . "_-_" . $subgroup_name . "_-_" . $subgroup[0] . "'>" . str_replace(array("_and_", "_"), array(" & ", " "), $subgroup[0]) . "</a></td></tr><tr>\n";
                 }
             }
             else
@@ -46,7 +46,7 @@ foreach ($statistics_groups as $group_name=>$group)
                     if ($subsubgroup_name != '[all]')
                     {
                         $g2_count++;
-                        $g2_content .= "<td class='td2'><a href='?s=" . $group_name . "_-_" . $subgroup_name . "_-_" . $subsubgroup_name . "'>" . str_replace(array("_", "and"), array(" ", "&"), "$subsubgroup_name") . "</a></td></tr>\n";
+                        $g2_content .= "<td class='td2'><a href='?s=" . $group_name . "_-_" . $subgroup_name . "_-_" . $subsubgroup_name . "'>" . str_replace(array("_and_", "_"), array(" & ", " "), "$subsubgroup_name") . "</a></td></tr>\n";
                         if ($g2_count < count($subgroup)) {
                             $g2_content .= "<tr>";
                         }
@@ -54,9 +54,9 @@ foreach ($statistics_groups as $group_name=>$group)
                 }
 
                 if (in_array('[all]', $subgroup)) {
-                    $g1_content .= "<td class='td2' rowspan='$g2_count'><a href='?s=" . $group_name . "_-_" . $subgroup_name . "'>" . str_replace(array("_", "and"), array(" ", "&"), $subgroup_name) . "</a></td>\n";
+                    $g1_content .= "<td class='td2' rowspan='$g2_count'><a href='?s=" . $group_name . "_-_" . $subgroup_name . "'>" . str_replace(array("_and_", "_"), array(" & ", " "), $subgroup_name) . "</a></td>\n";
                 } else {
-                    $g1_content .= "<td class='td0' rowspan='$g2_count'><span>" . str_replace(array("_", "and"), array(" ", "&"), $subgroup_name) . "</span></td>\n";
+                    $g1_content .= "<td class='td0' rowspan='$g2_count'><span>" . str_replace(array("_and_", "_"), array(" & ", " "), $subgroup_name) . "</span></td>\n";
                 }
                 $g1_content .= $g2_content;
                 $g1_count += $g2_count;
@@ -68,16 +68,16 @@ foreach ($statistics_groups as $group_name=>$group)
     if ($g1_count == 0)
     {
         print "<table class='table_header' id='th_$g_id'><tr>\n";
-        print "<td class='td1'><a href='?s=$group_name'>" . str_replace(array("_", "and"), array(" ", "&"), $group_name) . "</a></td><td class='td0'><span>&nbsp;</span></td><td class='td0'><span>&nbsp;</span></td><tr></tr>\n";
+        print "<td class='td1'><a href='?s=$group_name'>" . str_replace(array("_and_", "_"), array(" & ", " "), $group_name) . "</a></td><td class='td0'><span>&nbsp;</span></td><td class='td0'><span>&nbsp;</span></td><tr></tr>\n";
         print "</tr></table>";
     }
     else
     {
         print "<div class='table_div_header'><table class='table_header'><tr>\n";
         if (array_key_exists('[all]', $group)) {
-            print "<td class='td1' rowspan='$g1_count'><a href='?s=$group_name'>" . str_replace(array("_", "and"), array(" ", "&"), $group_name) . "</a></td>\n";
+            print "<td class='td1' rowspan='$g1_count'><a href='?s=$group_name'>" . str_replace(array("_and_", "_"), array(" & ", " "), $group_name) . "</a></td>\n";
         } else {
-            print "<td class='td0' rowspan='$g1_count'><span>" . str_replace(array("_", "and"), array(" ", "&"), $group_name) . "</span></td>\n";
+            print "<td class='td0' rowspan='$g1_count'><span>" . str_replace(array("_and_", "_"), array(" & ", " "), $group_name) . "</span></td>\n";
         }
         print "<td class='td_btn' id='th_$g_id' onmouseover='image_hover(\"plusminus_$g_id\");' onmouseout='image_default(\"plusminus_$g_id\");' title='Show statistics available in this group.' onclick='' >";
         print "<img id='plusminus_$g_id' src='img/plus.gif' class='img_arrow' alt='' />";

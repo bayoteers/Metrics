@@ -72,11 +72,11 @@ $graph->SetBox(true, '#68b3e3');
 // Setup the tab title
 $title = "    ";
 if ($selected_component != '') {
-    $title .= str_replace(array("_", "and"), array(" ", "&"), "'$selected_product' / '$selected_component' ");
+    $title .= str_replace(array("_and_", "_"), array(" & ", " "), "'$selected_product' / '$selected_component' ");
 } else if ($selected_product !== $ALL_PRODUCTS) {
-    $title .= str_replace(array("_", "and"), array(" ", "&"), "'$selected_product' ");
+    $title .= str_replace(array("_and_", "_"), array(" & ", " "), "'$selected_product' ");
 }
-$title .= "'" . str_replace(array("_", "and"), array(" ", "&"), $selected_statistic) . "' inflow / outflow graph   ";
+$title .= "'" . str_replace(array("_and_", "_"), array(" & ", " "), $selected_statistic) . "' inflow / outflow graph   ";
 
 $graph->tabtitle->Set($title);
 $graph->tabtitle->SetFont($GRAPH_FONT_NAME,FS_BOLD,8);

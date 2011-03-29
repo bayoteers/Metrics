@@ -68,17 +68,17 @@ else
             $link .= "_-_" . $name;
             print " / ";
         }
-        print "<a href='$link'>" . str_replace(array("_", "and"), array(" ", "&"), $name) . "</a>";
+        print "<a href='$link'>" . str_replace(array("_and_", "_"), array(" & ", " "), $name) . "</a>";
     }
     if ($selected_product != "") {
         $link .= "&p=$selected_product";
         print "&nbsp;&nbsp;-&rarr;&nbsp;&nbsp;";
-        print "<a href='$link'>" . ($selected_product===$ALL_PRODUCTS ? $STR_ALL_PRODUCTS : str_replace(array("_", "and"), array(" ", "&"), $selected_product)) . "</a>";
+        print "<a href='$link'>" . ($selected_product===$ALL_PRODUCTS ? $STR_ALL_PRODUCTS : str_replace(array("_and_", "_"), array(" & ", " "), $selected_product)) . "</a>";
     }
     if ($selected_component != "") {
         $link .= "&c=$selected_component";
         print " / ";
-        print "<a href='$link'>" . str_replace(array("_", "and"), array(" ", "&"), $selected_component) . "</a>";
+        print "<a href='$link'>" . str_replace(array("_and_", "_"), array(" & ", " "), $selected_component) . "</a>";
     }
     print "</p>";
     ?>
@@ -251,7 +251,7 @@ else
     if (file_exists("$DATA_FOLDER/$selected_statistic/$selected_product/$VARIABLES_FILE_NAME") ) {
         // TODO
                  
-        print "<span class='span_bold'>Reports presenting current situation in " . ($selected_product===$ALL_PRODUCTS ? $STR_ALL_PRODUCTS : "'".str_replace(array("_", "and"), array(" ", "&"), $selected_product)."'") . " directly in Bugzilla</span>:";
+        print "<span class='span_bold'>Reports presenting current situation in " . ($selected_product===$ALL_PRODUCTS ? $STR_ALL_PRODUCTS : "'".str_replace(array("_and_", "_"), array(" & ", " "), $selected_product)."'") . " directly in Bugzilla</span>:";
         print "<table class='tab_links'>";
         if ($selected_product == $ALL_PRODUCTS) {
             print "<tr><td>-<span class='span_bold'>[ $STR_PRODUCT / status ]</span>:</td><td>" . create_reports_links("bug_status", $STR_PRODUCT_COLUMN_NAME, $STR_CLASSIFICATION_COLUMN_NAME) . "</td></tr>";

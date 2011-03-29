@@ -97,11 +97,9 @@ if ($selected_statistic == '' || $selected_statistic == '-') {
         }
     }
 
-    // TODO
     if ( ! array_key_exists($ss_g, $statistics_groups) )
     {
         // GROUP does not exist -> reload the page to show the list of available statistics
-        
         header("Location: ?s=");
         exit("Error: user requested not existing statistics - reload the page to show the list of available statistics"); 
     }
@@ -171,7 +169,7 @@ if ($selected_statistic == '' || $selected_statistic == '-') {
 
 $title = "BAM";
 if ($selected_statistic != '' && $selected_statistic != '-') {
-	$title .= " (" . str_replace(array("_", "and"), array(" ", "&"), $selected_statistic);
+	$title .= " (" . str_replace(array("_and_", "_"), array(" & ", " "), $selected_statistic);
 	if ($selected_product != "") {
 		$title .= " / ";
 		if ($selected_product == $START_PAGE) {
@@ -181,39 +179,15 @@ if ($selected_statistic != '' && $selected_statistic != '-') {
         } else if ($selected_product == $ALL_PRODUCTS) {
             $title .= $STR_ALL_PRODUCTS;
         } else if ($selected_component == $GRAPHS_FOR_ALL_COMPONENTS) {
-        	$title .= str_replace(array("_", "and"), array(" ", "&"), "$selected_product / $STR_GRAPHS_FOR_ALL_COMPONENTS");
+        	$title .= str_replace(array("_and_", "_"), array(" & ", " "), "$selected_product / $STR_GRAPHS_FOR_ALL_COMPONENTS");
 		} else if ($selected_component != '') {
-            $title .= str_replace(array("_", "and"), array(" ", "&"), "$selected_product / $selected_component");
+            $title .= str_replace(array("_and_", "_"), array(" & ", " "), "$selected_product / $selected_component");
         } else {
-            $title .= str_replace(array("_", "and"), array(" ", "&"), $selected_product);
+            $title .= str_replace(array("_and_", "_"), array(" & ", " "), $selected_product);
         }
 	}
 	$title .= ")";
 }
-
-        if ($selected_product == $START_PAGE) {
-            $selected_product_name = $STR_START_PAGE;
-        } else if ($selected_product == $GRAPHS_FOR_ALL_PRODUCTS) {
-            $selected_product_name = $STR_GRAPHS_FOR_ALL_PRODUCTS;
-        } else if ($selected_product == $ALL_PRODUCTS) {
-            $selected_product_name = $STR_ALL_PRODUCTS;
-        } else if ($selected_component == $GRAPHS_FOR_ALL_COMPONENTS) {
-        	$selected_product_name = str_replace(array("_", "and"), array(" ", "&"), "$selected_product / $STR_GRAPHS_FOR_ALL_COMPONENTS");
-            if (count($products_list) > 15) {
-                $create_component_menu = true;
-            }
-		} else if ($selected_component != '') {
-            $selected_product_name = str_replace(array("_", "and"), array(" ", "&"), "$selected_product / $selected_component");
-            if (count($products_list) > 15) {
-                $create_component_menu = true;
-            }
-        } else {
-            $selected_product_name = str_replace(array("_", "and"), array(" ", "&"), $selected_product);
-            if (count($products_list) > 15) {
-                $create_component_menu = true;
-            }
-        }
-
 
 // global variables' file for particular statistic 
 if (file_exists("$DATA_FOLDER/$selected_statistic/$VARIABLES_FILE_NAME") ) {
@@ -261,24 +235,24 @@ if (file_exists("$DATA_FOLDER/$selected_statistic/$selected_product/$VARIABLES_F
                     <ul class="sf-menu"> <!-- menu -->
                         <li>
                             
-                            <a href="#" class='main'><?php print str_replace(array("_-_", "_", "and"), array(" / ", " ", "&"), ($selected_statistic!="" ? $selected_statistic : "-- select statistics --") ); ?></a>
+                            <a href="#" class='main'><?php print str_replace(array("_-_", "_and_", "_"), array(" / ", " & ", " "), ($selected_statistic!="" ? $selected_statistic : "-- select statistics --") ); ?></a>
                             <ul> <!-- menu list -->
                                 <li><a href='?s='>-- list of collected statistics --</a></li>
                                 <?php
                                 foreach ($statistics_groups as $group_name=>$group_content) {
-                                    print "<li><a href='?s=$group_name&p=$selected_product&c=$selected_component'>" . str_replace(array("_", "and"), array(" ", "&"), $group_name) . "</a>\n";
+                                    print "<li><a href='?s=$group_name&p=$selected_product&c=$selected_component'>" . str_replace(array("_and_", "_"), array(" & ", " "), $group_name) . "</a>\n";
                                     
                                         if (count($group_content) > 1 || !array_key_exists("[all]", $group_content) ) {
                                             print "<ul>";
                                             foreach ($group_content as $subgroup_name=>$subgroup_content) {
                                                 if ($subgroup_name != "[all]") {
-                                                    print "<li><a href='?s=$group_name"."_-_$subgroup_name&p=$selected_product&c=$selected_component'>" . str_replace(array("_", "and"), array(" ", "&"), $subgroup_name) . "</a>\n";
+                                                    print "<li><a href='?s=$group_name"."_-_$subgroup_name&p=$selected_product&c=$selected_component'>" . str_replace(array("_and_", "_"), array(" & ", " "), $subgroup_name) . "</a>\n";
                                                     
                                                     if (count($subgroup_content) > 1 || !in_array("[all]", $subgroup_content) ) {
                                                         print "<ul>\n";
                                                             foreach ($subgroup_content as $subsubgroup_name) {
                                                                 if ($subsubgroup_name != "[all]") {
-                                                                    print "<li><a href='?s=$group_name"."_-_$subgroup_name"."_-_$subsubgroup_name&p=$selected_product&c=$selected_component'>" . str_replace(array("_", "and"), array(" ", "&"), $subsubgroup_name) . "</a></li>\n";
+                                                                    print "<li><a href='?s=$group_name"."_-_$subgroup_name"."_-_$subsubgroup_name&p=$selected_product&c=$selected_component'>" . str_replace(array("_and_", "_"), array(" & ", " "), $subsubgroup_name) . "</a></li>\n";
                                                                 }
                                                             }
                                                         print "</ul>\n";
@@ -321,17 +295,17 @@ if (file_exists("$DATA_FOLDER/$selected_statistic/$selected_product/$VARIABLES_F
                             } else if ($selected_product == $ALL_PRODUCTS) {
                                 $selected_product_name = $STR_ALL_PRODUCTS;
                             } else if ($selected_component == $GRAPHS_FOR_ALL_COMPONENTS) {
-                            	$selected_product_name = str_replace(array("_", "and"), array(" ", "&"), "$selected_product / $STR_GRAPHS_FOR_ALL_COMPONENTS");
+                            	$selected_product_name = str_replace(array("_and_", "_"), array(" & ", " "), "$selected_product / $STR_GRAPHS_FOR_ALL_COMPONENTS");
                                 if (count($products_list) > 15) {
                                     $create_component_menu = true;
                                 }
 							} else if ($selected_component != '') {
-                                $selected_product_name = str_replace(array("_", "and"), array(" ", "&"), "$selected_product / $selected_component");
+                                $selected_product_name = str_replace(array("_and_", "_"), array(" & ", " "), "$selected_product / $selected_component");
                                 if (count($products_list) > 15) {
                                     $create_component_menu = true;
                                 }
                             } else {
-                                $selected_product_name = str_replace(array("_", "and"), array(" ", "&"), $selected_product);
+                                $selected_product_name = str_replace(array("_and_", "_"), array(" & ", " "), $selected_product);
                                 if (count($products_list) > 15) {
                                     $create_component_menu = true;
                                 }
@@ -341,11 +315,11 @@ if (file_exists("$DATA_FOLDER/$selected_statistic/$selected_product/$VARIABLES_F
                             print "<ul>\n";
                                 if ($create_component_menu) {
                                     if ( count($products_components) > 0 ) {
-                                        print "<li><a href='?s=$selected_statistic&p=$selected_product'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_", "and"), array(" ", "&"), $selected_product) . "</a>\n";
+                                        print "<li><a href='?s=$selected_statistic&p=$selected_product'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_and_", "_"), array(" & ", " "), $selected_product) . "</a>\n";
                                         print "<ul>\n";
 										print "<li><a href='?s=$selected_statistic&p=$selected_product&c=$GRAPHS_FOR_ALL_COMPONENTS'>$STR_GRAPHS_FOR_ALL_COMPONENTS</a></li>\n";
                                         foreach ($products_components as $component) {
-                                            print "<li><a href='?s=$selected_statistic&p=$selected_product&c=$component'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_", "and"), array(" ", "&"), $component) . "</a></li>\n";
+                                            print "<li><a href='?s=$selected_statistic&p=$selected_product&c=$component'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_and_", "_"), array(" & ", " "), $component) . "</a></li>\n";
                                         }
                                         print "</ul>\n";
                                     }
@@ -358,13 +332,13 @@ if (file_exists("$DATA_FOLDER/$selected_statistic/$selected_product/$VARIABLES_F
                                 
                                 if (count($products_list) < 16) {
                                     foreach ($products_list as $product) {
-                                        print "<li><a href='?s=$selected_statistic&p=$product'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" . str_replace(array("_", "and"), array(" ", "&"), $product) . "</a>\n";
+                                        print "<li><a href='?s=$selected_statistic&p=$product'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" . str_replace(array("_and_", "_"), array(" & ", " "), $product) . "</a>\n";
                                         $products_components = get_products_components("$DATA_FOLDER/$selected_statistic/$product");
                                         if ( count($products_components) > 0 ) {
                                             print "<ul>\n";
 											print "<li><a href='?s=$selected_statistic&p=$product&c=$GRAPHS_FOR_ALL_COMPONENTS'>$STR_GRAPHS_FOR_ALL_COMPONENTS</a></li>\n";
                                             foreach ($products_components as $component) {
-                                                print "<li><a href='?s=$selected_statistic&p=$product&c=$component'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_", "and"), array(" ", "&"), $component) . "</a></li>\n";
+                                                print "<li><a href='?s=$selected_statistic&p=$product&c=$component'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_and_", "_"), array(" & ", " "), $component) . "</a></li>\n";
                                             }
                                             print "</ul>\n";
                                         }
@@ -373,18 +347,18 @@ if (file_exists("$DATA_FOLDER/$selected_statistic/$selected_product/$VARIABLES_F
                                 } else {
                                     for ($c=0; $c<count($products_list); $c+=15) {
                                         $last = ($c+15 > count($products_list) ? count($products_list)-$c : 15);
-                                        print "<li><a href='#'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" . substr(str_replace(array("_", "and"), array(" ", "&"), $products_list[$c]),0,6) . "..&nbsp;&nbsp;&nbsp;-&gt;&nbsp;&nbsp;&nbsp;" . substr(str_replace(array("_", "and"), array(" ", "&"), $products_list[$c+$last-1]),0,6) . "..</a>\n";
+                                        print "<li><a href='#'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" . substr(str_replace(array("_and_", "_"), array(" & ", " "), $products_list[$c]),0,6) . "..&nbsp;&nbsp;&nbsp;-&gt;&nbsp;&nbsp;&nbsp;" . substr(str_replace(array("_and_", "_"), array(" & ", " "), $products_list[$c+$last-1]),0,6) . "..</a>\n";
 
                                         print "<ul>\n";
                                         for ($c1=0; $c1<$last; $c1++) {
                                             $product = $products_list[$c+$c1];
-                                            print "<li><a href='?s=$selected_statistic&p=$product'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_", "and"), array(" ", "&"), $product) . "</a>\n";
+                                            print "<li><a href='?s=$selected_statistic&p=$product'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_and_", "_"), array(" & ", " "), $product) . "</a>\n";
                                             $products_components = get_products_components("$DATA_FOLDER/$selected_statistic/$product");
                                             if ( count($products_components) > 0 ) {
                                                 print "<ul>\n";
 												print "<li><a href='?s=$selected_statistic&p=$product&c=$GRAPHS_FOR_ALL_COMPONENTS'>$STR_GRAPHS_FOR_ALL_COMPONENTS</a></li>\n";
                                                 foreach ($products_components as $component) {
-                                                    print "<li><a href='?s=$selected_statistic&p=$product&c=$component'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_", "and"), array(" ", "&"), $component) . "</a></li>\n";
+                                                    print "<li><a href='?s=$selected_statistic&p=$product&c=$component'>&nbsp;&nbsp;&nbsp;" . str_replace(array("_and_", "_"), array(" & ", " "), $component) . "</a></li>\n";
                                                 }
                                                 print "</ul>\n";
                                             }

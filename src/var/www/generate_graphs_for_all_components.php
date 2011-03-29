@@ -26,12 +26,12 @@ foreach ($s as $name) {
         $link .= "_-_" . $name;
         print " / ";
     }
-    print "<a href='$link'>" . str_replace(array("_", "and"), array(" ", "&"), $name) . "</a>";
+    print "<a href='$link'>" . str_replace(array("_and_", "_"), array(" & ", " "), $name) . "</a>";
 }
 if ($selected_product != "") {
     $link .= "&p=$selected_product";
     print "&nbsp;&nbsp;-&rarr;&nbsp;&nbsp;";
-    print "<a href='$link'>" . str_replace(array("_", "and"), array(" ", "&"), $selected_product) . "</a>";
+    print "<a href='$link'>" . str_replace(array("_and_", "_"), array(" & ", " "), $selected_product) . "</a>";
 }
 if ($selected_component != "") {
     $link .= "&c=$selected_component";
