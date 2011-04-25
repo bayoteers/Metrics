@@ -1,0 +1,12 @@
+#
+# Apache/PHP/BAM settings:
+#
+
+# Don't show directory listings for URLs which map to a directory.
+Options -Indexes
+
+# Follow symbolic links in this directory.
+Options +FollowSymLinks
+
+# Set the default handler.
+DirectoryIndex index.php
