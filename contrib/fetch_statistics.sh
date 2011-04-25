@@ -8,8 +8,9 @@
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 #==========================================================================
 
+cd ../bin;
 
 find ../conf -name "*.conf" -print0 | while read -d $'\0' file
 do
-  echo "../bin/fetch_statistics_from_bugzilla.pl $file"
+  ./fetch_statistics_from_bugzilla.pl $file
 done
