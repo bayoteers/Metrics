@@ -475,7 +475,8 @@ for $product (sort (keys %PRODUCTS)) {
             info("compare just fetched snapshot with previous one - prepare data for printing them on the web page");
             info("daily view: $product: $prev_snapshot_daily <-> $snapshot_output_file");
             $ret = execute_command(
-                "compare_statistics_snapshots.pl -d $CONFIG_FILE $product $prev_snapshot_daily $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME");
+"../bin/compare_statistics_snapshots.pl -d $CONFIG_FILE $product $prev_snapshot_daily $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME"
+            );
             if ($ret =~ /ERROR/) {
                 # TODO - if the file does not contain the header line then wget failed and file should be removed... shoud be..?
                 $errors .= $ret . "\n";
@@ -488,7 +489,7 @@ for $product (sort (keys %PRODUCTS)) {
             # compare just fetched snapshot with previous one - prepare data for printing them on the web page (weekly view)
             info("weekly view: $product: $prev_snapshot_weekly <-> $snapshot_output_file");
             $ret = execute_command(
-                 "compare_statistics_snapshots.pl -w $CONFIG_FILE $product $prev_snapshot_weekly $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME"
+"../bin/compare_statistics_snapshots.pl -w $CONFIG_FILE $product $prev_snapshot_weekly $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME"
             );
             if ($ret =~ /ERROR/) {
                 $errors .= $ret . "\n";
@@ -591,7 +592,8 @@ if ($RUN_FEW_TIMES_A_DAY eq "true") {
 info("compare new snapshot with previous one for ALL PRODUCTS - prepare data for printing them on the web page");
 info("daily view: ALL PRODUCTS: $prev_snapshot_daily <-> $snapshot_output_file");
 $ret = execute_command(
-       "compare_statistics_snapshots.pl -d $CONFIG_FILE $ALL_PRODUCTS_DIR $prev_snapshot_daily $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME");
+"../bin/compare_statistics_snapshots.pl -d $CONFIG_FILE $ALL_PRODUCTS_DIR $prev_snapshot_daily $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME"
+);
 if ($ret =~ /ERROR/) {
     # TODO - if the file does not contain the header line then wget failed and file should be removed... shoud be..?
     $errors .= $ret . "\n";
@@ -600,7 +602,8 @@ if ($ret =~ /ERROR/) {
 # compare new snapshot with previous one for ALL PRODUCTS - prepare data for printing them on the web page (weekly view)
 info("weekly view: ALL PRODUCTS: $prev_snapshot_weekly <-> $snapshot_output_file");
 $ret = execute_command(
-      "compare_statistics_snapshots.pl -w $CONFIG_FILE $ALL_PRODUCTS_DIR $prev_snapshot_weekly $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME");
+"../bin/compare_statistics_snapshots.pl -w $CONFIG_FILE $ALL_PRODUCTS_DIR $prev_snapshot_weekly $snapshot_output_file $BUGS_WHICH_CANNOT_BE_VERIFIED_FILE_NAME"
+);
 if ($ret =~ /ERROR/) {
     $errors .= $ret . "\n";
 }
