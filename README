@@ -1,7 +1,7 @@
-BAM - Bugzilla automated monitor
+Metrics
 =============================
 
-BAM is a tool to create daily statistics of bugs from Bugzilla.
+Metrics is a tool to create daily statistics of bugs from Bugzilla.
 Tool fetches the snapshot of current statuses of selected bugs according to rules defined in the configuration and:
 - generate the information about number of unconfirmed / open / resoved / unreleased / unverified / active bugs.
 - compare the snapshot with the previous one and generate the information about changes in bug statuses
