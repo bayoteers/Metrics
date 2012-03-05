@@ -470,9 +470,9 @@ function show_changes_details(row_id, details_file, desc_table, snapshot_taken_t
        + '&d=' + desc_table
        + '&t=' + snapshot_taken_time;
     if (sort_by == 1)
-        params += '&sid=true';
+        params += '&sort_by_bug_id=true';
     else if (sort_by == 0)
-        params += '&sid=false';
+        params += '&sort_by_bug_id=false';
         
 	   
     request.open("GET", 'changes_details.php' + params, true);

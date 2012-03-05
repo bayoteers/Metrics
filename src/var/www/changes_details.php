@@ -144,34 +144,37 @@ function print_changes_details($changes_details, $type, $header, $add_info)
         }
         
         if ($sort_by_bug_id) {
-            // sort by bug ID
+            $bugs_blocker = '';
+            $bugs_critical = '';
+            $bugs_major = '';
+            $bugs_normal = '';
+            $bugs_minor = '';
+            $bugs_enhancement = '';
             foreach ($changes_details[$type] as $bug_id=>$dd) {
                 $severity = $dd['severity'];
                 $priority = ($dd['priority']!=""?" / ".$dd['priority']:"");
                 $description = $dd['description'];
                 $description = str_replace  ( "<", "&gt;", $description);
                 $description = str_replace  ( "<", "&gt;", $description);
-                print "<a href='".$BUGZILLA_URL_BUG.$bug_id."'>$bug_id</a> (";
                 if ($severity == 'blocker') {
-                    print "<span class='blocker'>blocker";
+                    $bugs_list .= "<a href='".$BUGZILLA_URL_BUG.$bug_id."'>$bug_id</a> (<span class='blocker'>blocker$priority</span>) ".$description."<br />";
                 } else if ($severity == 'critical') {
-                    print "<span class='critical'>critical";
+                    $bugs_list .= "<a href='".$BUGZILLA_URL_BUG.$bug_id."'>$bug_id</a> (<span class='critical'>critical$priority</span>) ".$description."<br />";
                 } else if (! $bc_only) {
                     if ($severity == 'major') {
-                        print "<span class='major'>major";
+                        $bugs_list .= "<a href='".$BUGZILLA_URL_BUG.$bug_id."'>$bug_id</a> (<span class='major'>major$priority</span>) ".$description."<br />";
                     } else if ($severity == 'normal') {
-                        print "<span class='normal'>normal";
+                        $bugs_list .= "<a href='".$BUGZILLA_URL_BUG.$bug_id."'>$bug_id</a> (<span class='normal'>normal$priority</span>) ".$description."<br />";
                     } else if ($severity == 'minor') {
-                        print "<span class='minor'>minor";
+                        $bugs_list .= "<a href='".$BUGZILLA_URL_BUG.$bug_id."'>$bug_id</a> (<span class='minor'>minor$priority</span>) ".$description."<br />";
                     } else {
-                        print "<span class='enhancement'>$severity";
+                        $bugs_list .= "<a href='".$BUGZILLA_URL_BUG.$bug_id."'>$bug_id</a> (<span class='enhancement'>$severity$priority</span>) ".$description."<br />";
                     }
                 }
-                if (! $bc_only) {
-                    print "$priority</span>) ".$description."<br />";
-                }
             }
-        } else {
+            print $bugs_list;
+        }
+	else {
             // sort by bug severity
             $bugs_blocker = '';
             $bugs_critical = '';
